@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "ru.sberboom"
-version = "1.0"
+version = "1.2"
 
 kotlin {
     // Тот же общий слой, что и в Android-сборке (:shared).
@@ -53,7 +53,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi)
             packageName = "SberBoom Remote"
-            packageVersion = "1.0.0"
+            packageVersion = "1.2.0"
             description = "Локальное управление колонкой SberBoom"
             vendor = "SberBoom Remote"
             windows {
