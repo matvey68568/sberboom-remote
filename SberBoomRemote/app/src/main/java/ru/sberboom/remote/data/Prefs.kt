@@ -129,6 +129,14 @@ class Prefs(context: Context) : Settings {
         sp.edit().remove("device_name").remove("device_model").remove("device_firmware").apply()
     }
 
+    /** История прослушивания (JSON) — общий формат с Windows-версией. */
+    override var historyJson: String?
+        get() = sp.getString("history", null)
+        set(value) {
+            if (value == null) sp.edit().remove("history").apply()
+            else sp.edit().putString("history", value).apply()
+        }
+
     /** Громкая караоке-заливка активной строки. */
     override var karaokeFill: Boolean
         get() = sp.getBoolean("karaoke_fill", true)

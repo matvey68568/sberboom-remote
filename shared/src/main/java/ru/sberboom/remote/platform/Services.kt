@@ -35,6 +35,9 @@ interface Settings {
     fun tokenFor(host: String): String?
     fun setToken(host: String, token: String?)
 
+    /** История прослушивания — JSON-массив, формат общий для обеих платформ. */
+    var historyJson: String?
+
     val knownSpeakers: List<KnownSpeaker>
     fun rememberSpeaker(speaker: KnownSpeaker)
 
