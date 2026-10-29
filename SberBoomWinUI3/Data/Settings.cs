@@ -7,6 +7,17 @@ using System.Text.Json.Serialization;
 
 namespace SberBoom.WinUI.Data;
 
+public sealed class HistoryEntry
+{
+    public string TrackId { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string? Artist { get; set; }
+    public string? Cover { get; set; }
+    public long AtMs { get; set; }
+
+    public string Line => string.IsNullOrWhiteSpace(Artist) ? Title : Title + " — " + Artist;
+}
+
 public sealed class KnownSpeaker
 {
     public string Host { get; set; } = "";
@@ -36,6 +47,8 @@ public sealed class Settings
     public string ClientName { get; set; } = DefaultClientName;
     public bool LightTheme { get; set; }
     public Dictionary<string, string> Tokens { get; set; } = new();
+    public List<HistoryEntry> History { get; set; } = new();
+    public long? SleepUntilMs { get; set; }
     public List<KnownSpeaker> Speakers { get; set; } = new();
 
     [JsonIgnore]
@@ -106,6 +119,23 @@ public sealed class Settings
         DeviceName = name;
         DeviceModel = model;
         DeviceFirmware = firmware;
+        Save();
+    }
+
+    /// <summary>Недавно игравшее: до 40 записей, без повторов подряд.</summary>
+    public void PushHistory(string? trackId, string? title, string? artist, string? cover)
+    {
+        if (string.IsNullOrWhiteSpace(trackId) || string.IsNullOrWhiteSpace(title)) return;
+        History.RemoveAll(h => h.TrackId == trackId);
+        History.Insert(0, new HistoryEntry
+        {
+            TrackId = trackId!,
+            Title = title!,
+            Artist = artist,
+            Cover = cover,
+            AtMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+        });
+        if (History.Count > 40) History.RemoveRange(40, History.Count - 40);
         Save();
     }
 

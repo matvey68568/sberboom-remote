@@ -151,6 +151,13 @@ public sealed class SpeakerClient : IAsyncDisposable
         }
     }
 
+    /// <summary>Сырой ответ колонки (для repeated-полей: очередь, список BT).</summary>
+    public async Task<byte[]> RequestRawAsync(byte[] requestData, int timeoutMs = 6000)
+    {
+        var envelope = Requests.RequestEnvelope(Requests.NewMsgId(), requestData, Token, _clientName, _clientId);
+        return await SendRawAsync(envelope, timeoutMs).ConfigureAwait(false);
+    }
+
     /// <summary>Запрос с телом и разбором ответа.</summary>
     public async Task<EnvelopeReply> RequestAsync(byte[] requestData, int timeoutMs = 6000)
     {
@@ -164,6 +171,15 @@ public sealed class SpeakerClient : IAsyncDisposable
     {
         var socket = _socket ?? throw new SpeakerException("нет соединения с колонкой");
         var envelope = Requests.RequestEnvelope(Requests.NewMsgId(), requestData, Token, _clientName, _clientId);
+        await socket.SendAsync(envelope.AsMemory(), WebSocketMessageType.Binary, true, CancellationToken.None)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>ServerAction (DEEPLINK и прочее) — команда без ожидания ответа.</summary>
+    public async Task FireServerActionAsync(string bodyJson)
+    {
+        var socket = _socket ?? throw new SpeakerException("нет соединения с колонкой");
+        var envelope = Requests.ServerActionEnvelope(Requests.NewMsgId(), bodyJson, Token, _clientName, _clientId);
         await socket.SendAsync(envelope.AsMemory(), WebSocketMessageType.Binary, true, CancellationToken.None)
             .ConfigureAwait(false);
     }

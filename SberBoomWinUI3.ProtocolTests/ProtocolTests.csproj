@@ -13,6 +13,7 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="../SberBoomWinUI3/Protocol/*.cs" LinkBase="Protocol" />
+    <Compile Include="../SberBoomWinUI3/Net/ZvukApi.cs" LinkBase="Net" />
     <Compile Include="../SberBoomWinUI3/Net/SpeakerClient.cs" LinkBase="Net" />
   </ItemGroup>
 

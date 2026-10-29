@@ -44,6 +44,31 @@ public static class Requests
         return Tlv.Concat(parts.ToArray());
     }
 
+    /// <summary>ServerAction-конверт: type=1, полезная нагрузка в поле 4.</summary>
+    public static byte[] ServerActionEnvelope(string msgId, string bodyJson, string? token,
+        string clientName, string clientId)
+    {
+        var parts = new System.Collections.Generic.List<byte[]>
+        {
+            Tlv.Int(1, 1),
+            Tlv.Str(2, msgId),
+        };
+        if (!string.IsNullOrEmpty(token)) parts.Add(Tlv.Str(3, token!));
+        parts.Add(Tlv.Bytes(4, Tlv.Bytes(1, Encoding.UTF8.GetBytes(bodyJson))));
+        parts.Add(Tlv.Int(6, Proto.TokenTypePin));
+        parts.Add(Tlv.Str(7, clientName));
+        parts.Add(Tlv.Int(10, 1));
+        parts.Add(Tlv.Str(11, clientId));
+        return Tlv.Concat(parts.ToArray());
+    }
+
+    /// <summary>Тело ServerAction: {name, payload, smartAppInfo, type} — как у интеграции.</summary>
+    public static string ServerActionJson(string name, string payloadJson) =>
+        "{\"name\":" + System.Text.Json.JsonSerializer.Serialize(name) +
+        ",\"payload\":" + payloadJson +
+        ",\"smartAppInfo\":{\"appVersionId\":\"\",\"applicationId\":\"\",\"frontendEndpoint\":\"\"," +
+        "\"frontendType\":\"\",\"projectId\":\"\",\"systemName\":\"\"},\"type\":1}";
+
     public static string NewMsgId() => Guid.NewGuid().ToString();
 
     public static string MsgIdOf(byte[] envelope)

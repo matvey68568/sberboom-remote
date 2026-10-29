@@ -166,6 +166,73 @@ public static class Tlv
 
     public static string ToHex(byte[] data) => Convert.ToHexString(data).ToLowerInvariant();
 
+    /// <summary>
+    /// Декодер с сохранением повторяющихся тегов (proto `repeated`): значения
+    /// возвращаются сырыми payload'ами. Нужен для op=19 (список BT-устройств),
+    /// где Tlv.Decode схлопнул бы несколько сообщений в одно.
+    /// </summary>
+    public static Dictionary<int, List<byte[]>> DecodeRepeated(byte[] data)
+    {
+        var result = new Dictionary<int, List<byte[]>>();
+        var i = 0;
+        var n = data.Length;
+        while (i < n)
+        {
+            var keyRes = ReadVarint(data, i);
+            if (keyRes == null) return result;
+            var key = keyRes.Value.value;
+            i = keyRes.Value.next;
+            var tag = (int)(key >> 3);
+
+            switch ((int)(key & 0x7))
+            {
+                case VarintKind:
+                {
+                    var v = ReadVarint(data, i);
+                    if (v == null) return result;
+                    Add(result, tag, Varint(v.Value.value));
+                    i = v.Value.next;
+                    break;
+                }
+                case LenKind:
+                {
+                    var lenRes = ReadVarint(data, i);
+                    if (lenRes == null) return result;
+                    var len = (int)lenRes.Value.value;
+                    i = lenRes.Value.next;
+                    if (len < 0 || i + len > n) return result;
+                    var payload = new byte[len];
+                    Array.Copy(data, i, payload, 0, len);
+                    i += len;
+                    Add(result, tag, payload);
+                    break;
+                }
+                case Fixed32Kind:
+                {
+                    if (i + 4 > n) return result;
+                    var payload = new byte[4];
+                    Array.Copy(data, i, payload, 0, 4);
+                    Add(result, tag, payload);
+                    i += 4;
+                    break;
+                }
+                default:
+                    return result;
+            }
+        }
+        return result;
+    }
+
+    private static void Add(Dictionary<int, List<byte[]>> map, int tag, byte[] payload)
+    {
+        if (!map.TryGetValue(tag, out var list))
+        {
+            list = new List<byte[]>();
+            map[tag] = list;
+        }
+        list.Add(payload);
+    }
+
     /// <summary>Достать вложенный словарь по тегу (null, если тега нет или это не сообщение).</summary>
     public static Dictionary<int, object>? Map(Dictionary<int, object> src, int tag) =>
         src.TryGetValue(tag, out var v) ? v as Dictionary<int, object> : null;

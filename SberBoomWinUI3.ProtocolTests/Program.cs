@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using SberBoom.WinUI.Net;
 using SberBoom.WinUI.Protocol;
@@ -72,6 +73,15 @@ internal static class Program
                 Console.WriteLine($"       ids: trackId={t.TrackId} releaseId={t.ReleaseId} source={t.Source}");
                 Console.WriteLine($"       cover: {t.CoverUrl}");
             }
+
+            var btRaw = await client.RequestRawAsync(Requests.GetPairedBt);
+            var bt = Parsers.ParseBtDevices(btRaw);
+            Console.WriteLine($"bluetooth: {bt.Count} устройств");
+            foreach (var d in bt) Console.WriteLine($"   {d.Name} | {d.Mac} | {(d.Connected ? "подключено" : "не подключено")}");
+
+            var queueRaw = await client.RequestRawAsync(Requests.GetQueue);
+            var queueIds = Parsers.ParseQueueTrackIds(queueRaw);
+            Console.WriteLine($"queue: {queueIds.Count} треков ({string.Join(",", queueIds.Take(5))})");
 
             var queueText = await client.GetQueueJsonAsync();
             Console.WriteLine($"queue: {(queueText == null ? "нет" : queueText.Length + " символов JSON")}");
