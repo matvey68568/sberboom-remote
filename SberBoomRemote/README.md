@@ -15,13 +15,13 @@ Home Assistant-интеграции [sboom_ha](https://github.com/TohaRG2/sboom_
 | Версия | Где | Сборка |
 |---|---|---|
 | Android (APK) | `SberBoomRemote/` | `./gradlew :app:assembleDebug` |
-| Windows (exe) | `SberBoomDesktop/` | `./gradlew createDistributable` |
+| Windows | `SberBoomWinUI3/` (WinUI 3, C#) | `dotnet build -c Release`, затем `installer/build-msi.sh` |
 
 Общий слой — модуль `../shared`: TLV-кодек, конверт, команды, парсеры `op=10/12/17/19`,
 WSS-клиент `SpeakerClient`, каталог Sber Звука `ZvukApi`, лирика `LyricsApi`.
 Android подключает его как Gradle-модуль `:shared`, Windows — как дополнительный
 `srcDir`; платформа даёт только три реализации: `Settings`, `DiscoveryService`,
-`CoverService`. Подробности — в `../SberBoomDesktop/README.md`.
+`CoverService`. Windows-версия — отдельный порт протокола на C#: `../SberBoomWinUI3/README.md`.
 
 ## Возможности
 
@@ -118,7 +118,7 @@ Android подключает его как Gradle-модуль `:shared`, Window
 git checkout material-3-expressive
 
 cd SberBoomRemote && ./gradlew :app:testDebugUnitTest :app:assembleDebug
-cd ../SberBoomDesktop && python tools/sync-ui.py && ./gradlew createDistributable
+cd ../SberBoomWinUI3 && dotnet build -c Release
 ```
 
 `Expressive.kt` (общий для платформ) содержит `pressScale`, `ExpressiveChip`,

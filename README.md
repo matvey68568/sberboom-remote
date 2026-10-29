@@ -10,8 +10,7 @@ PIN-токен сохраняется локально.
 | Версия | Сборка | Готовый файл |
 |---|---|---|
 | Android | `SberBoomRemote/` (Gradle + AGP 9 + Compose) | `app-debug.apk` |
-| Windows | `SberBoomWinUI3/` (WinUI 3, C#/.NET 9) — версия 1.3.1 | `SberBoomRemote.exe`, zip без установки |
-| Windows (прежняя) | `SberBoomDesktop/` (Compose Desktop) | `SberBoom Remote.exe`, MSI-установщик — остаётся в репозитории до 1.4 |
+| Windows | `SberBoomWinUI3/` (WinUI 3, C#/.NET 9) — версия 1.3.1 | `SberBoomRemote.exe`, MSI-установщик |
 
 <p align="center">
   <img src="SberBoomRemote/docs/player.png" width="260" alt="Плеер">
@@ -56,7 +55,7 @@ PIN-токен сохраняется локально.
 │       ├── data/            PlayerRepository — оркестратор состояния
 │       └── platform/        Settings / DiscoveryService / CoverService (интерфейсы)
 ├── SberBoomRemote/          Android-приложение (модуль :shared)
-└── SberBoomDesktop/         Windows-приложение (shared как srcDir)
+└── SberBoomWinUI3/         Windows-приложение (WinUI 3, C#) — отдельный порт протокола
 ```
 
 Платформенные реализации — ровно три:
@@ -86,13 +85,13 @@ cd SberBoomRemote
 ### Windows
 
 ```bash
-cd SberBoomDesktop
-./gradlew run                  # запуск из исходников
-./gradlew createDistributable  # приложение с JVM: build/compose/binaries/main/app
+cd SberBoomWinUI3
+dotnet build -c Release         # bin/Release/net9.0-windows10.0.26100.0/SberBoomRemote.exe
+bash installer/build-msi.sh     # MSI-установщик (WiX 3.14 из tools/wix)
 ```
 
-`createDistributable` нужен полный JDK с `jpackage.exe` (JBR из Android Studio —
-урезанный JRE): положите JDK в `../tools/jdk21` или задайте `SB_JDK`.
+Подробности сборки (в том числе работа без Visual Studio) — в
+`SberBoomWinUI3/README.md`.
 
 ## Ветка `material-3-expressive`
 
@@ -118,13 +117,10 @@ cd SberBoomDesktop
   пульт, Bluetooth; выбранное состояние заливается `primaryContainer`.
 - **Транспорт** — плавающая пилюля `surfaceContainerHigh` с крупной кнопкой-сквориклом.
 
-Собрать обе версии из ветки:
+Собрать Android-версию:
 
 ```bash
-git checkout material-3-expressive
-
 cd SberBoomRemote && ./gradlew :app:testDebugUnitTest :app:assembleDebug
-cd ../SberBoomDesktop && python tools/sync-ui.py && ./gradlew createDistributable
 ```
 
 `Expressive.kt` (общий для платформ) содержит `pressScale`, `ExpressiveChip`,
