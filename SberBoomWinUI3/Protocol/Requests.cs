@@ -10,7 +10,6 @@ public static class Requests
     public static readonly byte[] GetMetadata = Tlv.EmptyRequest(Proto.OpGetMetaData);
     public static readonly byte[] GetQueue = Tlv.EmptyRequest(Proto.OpGetPlayingQueue);
     public static readonly byte[] GetPairedBt = Tlv.EmptyRequest(Proto.OpGetPairedBt);
-    public static readonly byte[] FindRemote = Tlv.EmptyRequest(Proto.OpFindRemote);
     public static readonly byte[] BtDiscoverable = Tlv.EmptyRequest(Proto.OpBtDiscoverable);
     public static readonly byte[] KeepAlive = Tlv.EmptyRequest(Proto.OpKeepAlive);
     public static readonly byte[] PairInit = Tlv.EmptyRequest(Proto.OpPinConnect);

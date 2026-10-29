@@ -519,12 +519,6 @@ public sealed partial class MainWindow : Window
         _ = CommandAsync(Requests.Speed(next));
     }
 
-    private void FindRemote_Click(object sender, RoutedEventArgs e)
-    {
-        _ = CommandAsync(Requests.FindRemote);
-        ShowNotice("Колонка звенит — ищите пульт рядом");
-    }
-
     private void ProgressSlider_ValueChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
         if (_updatingUi) return;
