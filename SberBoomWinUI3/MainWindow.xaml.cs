@@ -30,10 +30,11 @@ public sealed partial class MainWindow : Window
 
     private readonly Settings _settings = Settings.Load();
     private readonly ZvukApi _zvuk = new();
-    private readonly DispatcherTimer _refreshTimer = new() { Interval = TimeSpan.FromSeconds(2) };
+    private readonly DispatcherTimer _refreshTimer = new() { Interval = TimeSpan.FromSeconds(3) };
     private readonly DispatcherTimer _keepAliveTimer = new() { Interval = TimeSpan.FromSeconds(20) };
     private readonly DispatcherTimer _tickTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly DispatcherTimer _seekTimer = new() { Interval = TimeSpan.FromMilliseconds(450) };
+    private readonly DispatcherTimer _volumeTimer = new() { Interval = TimeSpan.FromMilliseconds(350) };
 
     private SpeakerClient? _client;
     private SpeakerState? _state;
@@ -41,13 +42,16 @@ public sealed partial class MainWindow : Window
     private bool _updatingUi;
     private bool _seekPending;
     private int _seekTarget;
+    private int? _volumeTarget;
     private bool _shuffle;
     private string _repeat = "none";
     private bool _liked;
     private float _speed = 1f;
     private string? _lyricsFor;
+    private string? _historyTrackId;
     private List<LrcLine> _lyrics = new();
     private bool _sleepFired;
+    private bool _dialogOpen;
 
     public MainWindow()
     {
@@ -92,6 +96,7 @@ public sealed partial class MainWindow : Window
         _keepAliveTimer.Tick += (_, _) => _ = KeepAliveAsync();
         _tickTimer.Tick += (_, _) => OnTick();
         _seekTimer.Tick += (_, _) => FlushSeek();
+        _volumeTimer.Tick += (_, _) => FlushVolume();
 
         HostBox.Text = _settings.Host ?? string.Empty;
         Program.Log("window ready");
@@ -360,8 +365,9 @@ public sealed partial class MainWindow : Window
         }
 
         _ = EnsureLyricsAsync(track);
-        if (track?.Playing == true && !string.IsNullOrEmpty(track.TrackId))
+        if (track?.Playing == true && !string.IsNullOrEmpty(track.TrackId) && track.TrackId != _historyTrackId)
         {
+            _historyTrackId = track.TrackId;
             _settings.PushHistory(track.TrackId, track.Title, track.ArtistLine, track.CoverUrl);
         }
     }
@@ -393,22 +399,31 @@ public sealed partial class MainWindow : Window
     private void UpdateProgress(Track? track, bool force = false)
     {
         var duration = track?.DurationSec ?? 0;
-        if (duration <= 0)
+        var previousGuard = _updatingUi;
+        _updatingUi = true;   // иначе смена Value выглядит как перемотка пользователем
+        try
         {
-            ProgressSlider.IsEnabled = false;
-            if (!_seekPending) ProgressSlider.Value = 0;
-            PositionText.Text = "";
-            DurationText.Text = "прямой эфир";
-            return;
+            if (duration <= 0)
+            {
+                ProgressSlider.IsEnabled = false;
+                if (!_seekPending) ProgressSlider.Value = 0;
+                PositionText.Text = "";
+                DurationText.Text = "прямой эфир";
+                return;
+            }
+
+            ProgressSlider.Maximum = duration;
+            if (_seekPending && !force) return;
+
+            var position = Math.Clamp(track!.LivePositionSec(), 0, duration);
+            ProgressSlider.Value = position;
+            PositionText.Text = FormatTime(position);
+            DurationText.Text = FormatTime(duration);
         }
-
-        ProgressSlider.Maximum = duration;
-        if (_seekPending && !force) return;
-
-        var position = Math.Clamp(track!.LivePositionSec(), 0, duration);
-        ProgressSlider.Value = position;
-        PositionText.Text = FormatTime(position);
-        DurationText.Text = FormatTime(duration);
+        finally
+        {
+            _updatingUi = previousGuard;
+        }
     }
 
     private void OnTick()
@@ -538,7 +553,7 @@ public sealed partial class MainWindow : Window
         _ = CommandAsync(Requests.Seek(_seekTarget));
     }
 
-    private async void VolumeSlider_ValueChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    private void VolumeSlider_ValueChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
         VolumeText.Text = (int)Math.Round(e.NewValue) + "%";
         if (_updatingUi || _state == null) return;
@@ -546,7 +561,16 @@ public sealed partial class MainWindow : Window
         var value = (int)Math.Round(e.NewValue);
         if (Math.Abs(value - _state.Volume) < 1) return;
 
-        await CommandAsync(Requests.Volume(value));
+        _volumeTarget = value;
+        _volumeTimer.Stop();
+        _volumeTimer.Start();
+    }
+
+    private void FlushVolume()
+    {
+        _volumeTimer.Stop();
+        if (_volumeTarget != null) _ = CommandAsync(Requests.Volume(_volumeTarget.Value));
+        _volumeTarget = null;
     }
 
     /// <summary>Воспроизведение через ServerAction DEEPLINK (как в Android-версии).</summary>
@@ -868,17 +892,50 @@ public sealed partial class MainWindow : Window
 
     // ─────────────────────────── helpers ───────────────────────────
 
+    /// <summary>Показывает диалог, если другой уже не открыт (WinUI не умеет два сразу).</summary>
     private async Task ShowDialogAsync(string title, object content, string closeText = "Закрыть")
     {
-        var dialog = new ContentDialog
+        if (_dialogOpen) return;
+        _dialogOpen = true;
+        try
         {
-            XamlRoot = RootGrid.XamlRoot,
-            Title = title,
-            Content = content,
-            CloseButtonText = closeText,
-            DefaultButton = ContentDialogButton.Close,
-        };
-        await dialog.ShowAsync();
+            var dialog = new ContentDialog
+            {
+                XamlRoot = RootGrid.XamlRoot,
+                Title = title,
+                Content = content,
+                CloseButtonText = closeText,
+                DefaultButton = ContentDialogButton.Close,
+            };
+            await dialog.ShowAsync();
+        }
+        catch (Exception ex)
+        {
+            Program.Log("dialog: " + ex.Message);
+        }
+        finally
+        {
+            _dialogOpen = false;
+        }
+    }
+
+    /// <summary>То же для диалогов, собранных на месте (поиск, очередь, Bluetooth, текст).</summary>
+    private async Task ShowDialogGuardedAsync(ContentDialog dialog)
+    {
+        if (_dialogOpen) return;
+        _dialogOpen = true;
+        try
+        {
+            await dialog.ShowAsync();
+        }
+        catch (Exception ex)
+        {
+            Program.Log("dialog: " + ex.Message);
+        }
+        finally
+        {
+            _dialogOpen = false;
+        }
     }
 
     private static Brush Resource(string key) => (Brush)Application.Current.Resources[key];

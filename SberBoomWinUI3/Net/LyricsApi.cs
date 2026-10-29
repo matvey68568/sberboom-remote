@@ -53,6 +53,9 @@ public static class LyricsApi
         }
     }
 
+    /// <summary>Поправка на задержку позиции: строка показывается чуть раньше звука.</summary>
+    public const float LeadSec = 0.35f;
+
     private static readonly Regex TimeTag = new(@"\[(\d{1,2}):(\d{2})(?:[.,](\d{1,3}))?\]", RegexOptions.Compiled);
 
     /// <summary>Разбор LRC: строки с таймкодами, пустые пропускаются.</summary>
@@ -94,7 +97,7 @@ public static class LyricsApi
         var index = -1;
         for (var i = 0; i < lines.Count; i++)
         {
-            if (lines[i].TimeSec <= positionSec + 0.15f) index = i;
+            if (lines[i].TimeSec <= positionSec + LeadSec) index = i;
             else break;
         }
         return index;

@@ -18,6 +18,10 @@ public sealed class ZvukItem
     public string? CoverUrl { get; set; }
 
     public string Line => string.IsNullOrWhiteSpace(Subtitle) ? Title : Title + " — " + Subtitle;
+
+    // В ListView элемент показывается через ToString, а onClick отдаёт сам объект —
+    // так не приходится искать его по тексту (одинаковые названия ломали выбор).
+    public override string ToString() => Line;
 }
 
 /// <summary>

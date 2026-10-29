@@ -8,6 +8,12 @@ import okhttp3.Request
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
+/**
+ * Насколько раньше показывать строку: позиция трека приходит по сети с задержкой,
+ * поэтому без поправки караоке отставало от звука.
+ */
+const val LEAD_SEC = 0.35f
+
 /** Строка текста с привязкой ко времени трека. */
 data class LyricLine(val timeSec: Float, val text: String)
 
@@ -25,7 +31,7 @@ data class Lyrics(
         if (lines.isEmpty()) return -1
         var active = -1
         for (i in lines.indices) {
-            if (lines[i].timeSec <= positionSec + 0.15f) active = i else break
+            if (lines[i].timeSec <= positionSec + LEAD_SEC) active = i else break
         }
         return active
     }

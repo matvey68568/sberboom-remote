@@ -312,9 +312,16 @@ class PlayerRepository(
         mdRaw?.let { Payloads.parseDeviceInfo(it) }?.let(::applyDeviceInfo)
         // Задержка связи: эхо-op 8 возвращает наш же payload.
         measureLatency(c)
-        // Какое Bluetooth-устройство подключено — для подписи источника.
-        refreshBtDevices()
         return true
+    }
+
+    /** Только состояние — для моментов, когда колонка играет и лишние запросы вредны. */
+    private suspend fun syncStateOnly(c: SpeakerClient) {
+        val raw = runCatching { c.request(Requests.GET_STATE, 5_000) }.getOrNull() ?: return
+        val speaker = Payloads.parseState(raw) ?: return
+        applyVolume(speaker)
+        _state.update { it.copy(device = speaker.device) }
+        Payloads.trackFromRawState(raw)?.let(::applyTrack)
     }
 
     private fun startPolling(c: SpeakerClient) {
@@ -387,6 +394,9 @@ class PlayerRepository(
         )
         _state.update { it.copy(track = merged) }
         resolveCover(merged)
+        if (merged.source == Source.BLUETOOTH && _state.value.btDevices.isEmpty()) {
+            refreshBtDevices()
+        }
         loadLyrics(merged)
         if (merged.title != null && merged.trackId != prev?.trackId) rememberPlayed(merged)
     }
@@ -720,8 +730,8 @@ class PlayerRepository(
                 val accepted = field4?.toString()?.contains("OK") == true
                 if (accepted) {
                     notice("Включаю на колонке")
-                    delay(900)
-                    client?.let { syncAll(it) }
+                    delay(700)
+                    client?.let { syncStateOnly(it) }
                 } else {
                     notice("Колонка отклонила запрос")
                 }

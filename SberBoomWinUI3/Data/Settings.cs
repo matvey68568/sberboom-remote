@@ -16,6 +16,8 @@ public sealed class HistoryEntry
     public long AtMs { get; set; }
 
     public string Line => string.IsNullOrWhiteSpace(Artist) ? Title : Title + " — " + Artist;
+
+    public override string ToString() => Line;
 }
 
 public sealed class KnownSpeaker

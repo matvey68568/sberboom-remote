@@ -371,7 +371,7 @@ fun PlayerScreen(
             // Текущая строка текста — тап открывает караоке.
             val lyricLine = run {
                 val pos = (track?.livePositionSec(tick) ?: 0).toFloat()
-                state.lyrics.getOrNull(state.lyrics.indexOfLast { it.timeSec <= pos + 0.15f })?.text
+                state.lyrics.getOrNull(state.lyrics.indexOfLast { it.timeSec <= pos + ru.sberboom.remote.net.LEAD_SEC })?.text
             }
             if (!lyricLine.isNullOrBlank()) {
                 Spacer(Modifier.height(8.dp))
@@ -641,7 +641,7 @@ fun PlayerScreen(
 
         if (showLyrics) {
             val positionSec = (track?.livePositionSec(tick) ?: 0).toFloat()
-            val activeIndex = state.lyrics.indexOfLast { it.timeSec <= positionSec + 0.15f }
+            val activeIndex = state.lyrics.indexOfLast { it.timeSec <= positionSec + ru.sberboom.remote.net.LEAD_SEC }
             val lineStart = state.lyrics.getOrNull(activeIndex)?.timeSec
             val nextStart = state.lyrics.getOrNull(activeIndex + 1)?.timeSec
             val progress = if (lineStart != null) {
