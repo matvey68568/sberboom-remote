@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>SberBoom.WinUI</RootNamespace>
+    <AssemblyName>SberBoomRemote</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize>
+    <WindowsAppSdkDeploymentManagerInitialize>false</WindowsAppSdkDeploymentManagerInitialize>
+    <WindowsAppSdkCompatibilityInitialize>false</WindowsAppSdkCompatibilityInitialize>
+    <WindowsAppSdkAutoInitialize>false</WindowsAppSdkAutoInitialize>
+    <WindowsAppSdkUndockedRegFreeWinRTInitialize>false</WindowsAppSdkUndockedRegFreeWinRTInitialize>
+
+    <!-- Самоинициализатор Windows App SDK: авто-генерация из nuget-таргетов
+         не срабатывает без MSIX-тулинга, поэтому подключаем файл и дефайн сами.
+         Для self-contained нужен именно UndockedRegFreeWinRT. -->
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN;</DefineConstants>
+    <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
+    <SelfContained>false</SelfContained>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <EnableDefaultItems>true</EnableDefaultItems>
+
+    <!-- Сборка без Visual Studio: PRI-задачи (Microsoft.Build.Packaging.Pri.Tasks)
+         поставляются только с VS/UWP-workload. Для распакованного (unpackaged)
+         приложения без resw они не нужны — генерировать .pri не требуется. -->
+    <EnableMsixTooling>false</EnableMsixTooling>
+    <AppxGeneratePriEnabled>false</AppxGeneratePriEnabled>
+    <AppxGeneratePrisForPortableLibrariesEnabled>false</AppxGeneratePrisForPortableLibrariesEnabled>
+    <DefaultLanguage>ru-RU</DefaultLanguage>
+
+    <!-- версия: Windows-версия на WinUI 3 -->
+    <Version>1.3.1</Version>
+    <AssemblyVersion>1.3.1.0</AssemblyVersion>
+    <FileVersion>1.3.1.0</FileVersion>
+    <Product>SberBoom Remote</Product>
+    <AssemblyTitle>SberBoom Remote</AssemblyTitle>
+    <Company>SberBoom Remote</Company>
+    <Description>Local control for SberBoom speakers over Wi-Fi</Description>
+  </PropertyGroup>
+
+  <!-- Задачи AppxPackage/PRI берём из своих заглушек (см. tools/msbuild-shims):
+       в системе нет Visual Studio, а Windows App SDK тянет их DLL оттуда. -->
+  <PropertyGroup>
+    <ShimDir>$(MSBuildThisFileDirectory)../tools/msbuild-shims/bin/Release/net9.0/</ShimDir>
+    <AppxMSBuildToolsPath>$(ShimDir)</AppxMSBuildToolsPath>
+    <AppxMSBuildTaskAssembly>$(ShimDir)MSBuildShims.dll</AppxMSBuildTaskAssembly>
+    <PriProjTaskAssembly>$(ShimDir)MSBuildShims.dll</PriProjTaskAssembly>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(NuGetPackageRoot)microsoft.windowsappsdk/1.7.260224002/include/WindowsAppRuntimeAutoInitializer.cs"
+             Link="WindowsAppRuntimeAutoInitializer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.260224002" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
+  </ItemGroup>
+
+</Project>

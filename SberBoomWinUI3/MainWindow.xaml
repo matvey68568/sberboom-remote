@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="SberBoom.WinUI.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:SberBoom.WinUI.Controls">
+
+    <Grid x:Name="RootGrid" Background="{ThemeResource AppBg}">
+
+        <!-- ═══════════ подключение ═══════════ -->
+        <ScrollViewer x:Name="ConnectView" Padding="22,18,22,22" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="14">
+                <Border Width="64" Height="64" CornerRadius="22" HorizontalAlignment="Left"
+                        Background="{ThemeResource AppAccentSoft}">
+                    <FontIcon Glyph="&#xE7F5;" FontSize="30" Foreground="{ThemeResource AppAccent}" />
+                </Border>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="SberBoom" FontSize="40" FontWeight="Bold"
+                               Foreground="{ThemeResource AppText}" />
+                    <TextBlock Text="Локальное управление колонкой по Wi-Fi. Без облака, аккаунта и токенов Сбера."
+                               TextWrapping="Wrap" FontSize="14"
+                               Foreground="{ThemeResource AppTextMuted}" />
+                </StackPanel>
+
+                <StackPanel x:Name="ScanStatusPanel" Orientation="Horizontal" Spacing="8">
+                    <ProgressRing x:Name="ScanRing" Width="16" Height="16" IsActive="False"
+                                  Foreground="{ThemeResource AppAccent}" />
+                    <TextBlock x:Name="ScanStatus" FontSize="12"
+                               Foreground="{ThemeResource AppTextMuted}" Text="Готово к поиску" />
+                </StackPanel>
+
+                <ListView x:Name="SpeakersList" SelectionMode="None" IsItemClickEnabled="True"
+                          ItemClick="SpeakersList_ItemClick" MaxHeight="180" />
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="ScanButton" Content="Найти колонки" Style="{StaticResource ChipButton}"
+                            Click="ScanButton_Click" />
+                    <Button x:Name="PairButton" Content="Сопряжение" Style="{StaticResource ChipButton}"
+                            Click="PairButton_Click" />
+                </StackPanel>
+
+                <TextBlock Text="Или введите адрес вручную" FontSize="15" FontWeight="SemiBold"
+                           Foreground="{ThemeResource AppText}" Margin="0,6,0,0" />
+
+                <TextBox x:Name="HostBox" PlaceholderText="192.168.0.178" CornerRadius="20"
+                         FontSize="15" />
+                <Button x:Name="ConnectButton" Content="Подключиться" Style="{StaticResource PrimaryButton}"
+                        Height="52" HorizontalAlignment="Stretch" Click="ConnectButton_Click" />
+
+                <TextBlock x:Name="ConnectError" FontSize="13" TextWrapping="Wrap" Visibility="Collapsed"
+                           Foreground="{ThemeResource AppError}" />
+
+                <TextBlock FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource AppTextMuted}"
+                           Text="При первом подключении колонка попросит подтвердить доступ кнопкой «+» на корпусе." />
+
+                <Button x:Name="ForgetButton" Content="Забыть сохранённую колонку"
+                        Style="{StaticResource ChipButton}" Click="ForgetButton_Click"
+                        Visibility="Collapsed" HorizontalAlignment="Left" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ═══════════ плеер ═══════════ -->
+        <Grid x:Name="PlayerView" Visibility="Collapsed">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Padding="18,12,18,24" Spacing="0">
+
+                    <!-- шапка -->
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Width="42" Height="42" CornerRadius="16"
+                                Background="{ThemeResource AppAccentSoft}">
+                            <FontIcon Glyph="&#xE7F5;" FontSize="20" Foreground="{ThemeResource AppAccent}" />
+                        </Border>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                            <TextBlock x:Name="SpeakerName" FontSize="16" FontWeight="SemiBold"
+                                       TextTrimming="CharacterEllipsis" MaxLines="1"
+                                       Foreground="{ThemeResource AppText}" />
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Ellipse x:Name="StatusDot" Width="8" Height="8"
+                                         Fill="{ThemeResource AppAccent}" VerticalAlignment="Center" />
+                                <TextBlock x:Name="StatusText" FontSize="12"
+                                           Foreground="{ThemeResource AppTextMuted}" Text="На связи" />
+                                <TextBlock x:Name="HostText" FontSize="12"
+                                           Foreground="{ThemeResource AppTextMuted}" />
+                            </StackPanel>
+                            <TextBlock x:Name="DeviceLine" FontSize="11" MaxLines="1"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{ThemeResource AppTextMuted}" />
+                        </StackPanel>
+
+                        <Button Grid.Column="2" Style="{StaticResource ChipButton}" Click="MenuButton_Click">
+                            <FontIcon Glyph="&#xE712;" FontSize="16" />
+                            <Button.Flyout>
+                                <MenuFlyout x:Name="AppMenu">
+                                    <MenuFlyoutItem Text="Состояние колонки" Click="DevicePanel_Click" />
+                                    <MenuFlyoutItem Text="Обновить" Click="Refresh_Click" />
+                                    <MenuFlyoutItem Text="Сопряжение заново" Click="PairAgain_Click" />
+                                    <MenuFlyoutItem Text="Сменить колонку" Click="ChangeSpeaker_Click" />
+                                    <MenuFlyoutSeparator />
+                                    <MenuFlyoutItem Text="Найти пульт" Click="FindRemote_Click" />
+                                    <MenuFlyoutItem x:Name="ThemeMenuItem" Text="Светлая тема" Click="Theme_Click" />
+                                    <MenuFlyoutSeparator />
+                                    <MenuFlyoutItem Text="Забыть колонку" Click="ForgetButton_Click" />
+                                    <MenuFlyoutItem Text="Отключиться" Click="Disconnect_Click" />
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+
+                        <Button Grid.Column="3" Style="{StaticResource ChipButton}" Click="ChangeSpeaker_Click">
+                            <FontIcon Glyph="&#xE72A;" FontSize="16" />
+                        </Button>
+                    </Grid>
+
+                    <!-- обложка -->
+                    <Border x:Name="CoverBorder" Height="330" CornerRadius="36" Margin="0,16,0,0"
+                            Background="{ThemeResource AppChip}">
+                        <Grid>
+                            <Image x:Name="CoverImage" Stretch="UniformToFill" />
+                            <FontIcon x:Name="CoverPlaceholder" Glyph="&#xE8D6;" FontSize="72"
+                                      Foreground="{ThemeResource AppTextMuted}" Opacity="0.35" />
+                            <Border x:Name="SourceBadge" VerticalAlignment="Bottom" HorizontalAlignment="Left"
+                                    Margin="14" Padding="12,6" CornerRadius="20" Background="#73000000"
+                                    Visibility="Collapsed">
+                                <TextBlock x:Name="SourceText" FontSize="11" Foreground="White" />
+                            </Border>
+                            <ProgressRing x:Name="BufferRing" Width="20" Height="20" IsActive="False"
+                                          HorizontalAlignment="Right" VerticalAlignment="Top" Margin="14"
+                                          Foreground="White" Visibility="Collapsed" />
+                        </Grid>
+                    </Border>
+
+                    <!-- текст -->
+                    <TextBlock x:Name="TrackTitle" Text="Ничего не играет" Margin="0,18,0,0"
+                               FontSize="24" FontWeight="SemiBold" TextWrapping="Wrap" MaxLines="2"
+                               TextTrimming="CharacterEllipsis" Foreground="{ThemeResource AppText}" />
+                    <TextBlock x:Name="TrackArtist" FontSize="15" Margin="0,4,0,0" MaxLines="1"
+                               TextTrimming="CharacterEllipsis" Foreground="{ThemeResource AppTextMuted}" />
+                    <TextBlock x:Name="TrackAlbum" FontSize="12" Margin="0,2,0,0" MaxLines="1"
+                               TextTrimming="CharacterEllipsis" Foreground="{ThemeResource AppTextMuted}"
+                               Opacity="0.8" />
+
+                    <!-- волнистый прогресс -->
+                    <controls:WavyProgress x:Name="Progress" Margin="0,16,0,0" Height="36" />
+
+                    <Grid Margin="0,2,0,0">
+                        <TextBlock x:Name="PositionText" Text="0:00" FontSize="12" HorizontalAlignment="Left"
+                                   Foreground="{ThemeResource AppTextMuted}" />
+                        <TextBlock x:Name="DurationText" Text="0:00" FontSize="12" HorizontalAlignment="Right"
+                                   Foreground="{ThemeResource AppTextMuted}" />
+                    </Grid>
+
+                    <!-- транспорт -->
+                    <Border Background="{ThemeResource AppChip}" CornerRadius="44" Margin="0,12,0,0" Padding="10,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Button x:Name="ShuffleButton" Grid.Column="0" Style="{StaticResource ChipButton}"
+                                    Click="Shuffle_Click">
+                                <FontIcon x:Name="ShuffleIcon" Glyph="&#xE8B1;" FontSize="18" />
+                            </Button>
+
+                            <Button Grid.Column="2" Background="Transparent" BorderThickness="0" Click="Prev_Click">
+                                <FontIcon Glyph="&#xE892;" FontSize="34" Foreground="{ThemeResource AppText}" />
+                            </Button>
+
+                            <Button x:Name="PlayButton" Grid.Column="3" Width="68" Height="68" CornerRadius="24"
+                                    Background="{ThemeResource AppAccent}" BorderThickness="0"
+                                    HorizontalAlignment="Center" Click="Play_Click">
+                                <FontIcon x:Name="PlayIcon" Glyph="&#xE768;" FontSize="30"
+                                          Foreground="{ThemeResource AppOnAccent}" />
+                            </Button>
+
+                            <Button Grid.Column="4" Background="Transparent" BorderThickness="0" Click="Next_Click">
+                                <FontIcon Glyph="&#xE893;" FontSize="34" Foreground="{ThemeResource AppText}" />
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- чипы -->
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,10,0,0">
+                        <Button x:Name="LikeButton" Style="{StaticResource ChipButton}" Click="Like_Click">
+                            <FontIcon x:Name="LikeIcon" Glyph="&#xE8E1;" FontSize="18" />
+                        </Button>
+                        <Button Style="{StaticResource ChipButton}" Click="Repeat_Click">
+                            <FontIcon x:Name="RepeatIcon" Glyph="&#xE8EE;" FontSize="18" />
+                        </Button>
+                        <Button Style="{StaticResource ChipButton}" Click="DevicePanel_Click">
+                            <FontIcon Glyph="&#xE7F5;" FontSize="18" />
+                        </Button>
+                        <Button x:Name="SpeedButton" Style="{StaticResource ChipButton}" Click="Speed_Click">
+                            <TextBlock x:Name="SpeedText" FontSize="13" Text="1×" />
+                        </Button>
+                    </StackPanel>
+
+                    <!-- громкость -->
+                    <Grid Margin="0,14,0,0" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="MuteButton" Grid.Column="0" Style="{StaticResource ChipButton}"
+                                Click="Mute_Click">
+                            <FontIcon x:Name="MuteIcon" Glyph="&#xE767;" FontSize="18" />
+                        </Button>
+                        <Slider x:Name="VolumeSlider" Grid.Column="1" Minimum="0" Maximum="100"
+                                VerticalAlignment="Center" ValueChanged="VolumeSlider_ValueChanged"
+                                />
+                        <TextBlock x:Name="VolumeText" Grid.Column="2" FontSize="12" Width="40"
+                                   VerticalAlignment="Center" Text="0%"
+                                   Foreground="{ThemeResource AppTextMuted}" />
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- ═══════════ оверлей: сопряжение ═══════════ -->
+        <Grid x:Name="PairingOverlay" Visibility="Collapsed" Background="#99000000">
+            <Border Background="{ThemeResource AppSurface}" CornerRadius="28" Padding="24"
+                    HorizontalAlignment="Center" VerticalAlignment="Center" Width="320">
+                <StackPanel Spacing="12">
+                    <Border Width="72" Height="72" CornerRadius="36" Background="{ThemeResource AppAccentSoft}"
+                            HorizontalAlignment="Center">
+                        <FontIcon Glyph="&#xE7F5;" FontSize="34" Foreground="{ThemeResource AppAccent}" />
+                    </Border>
+                    <TextBlock Text="Нажмите «+» на колонке" FontSize="19" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" TextAlignment="Center"
+                               Foreground="{ThemeResource AppText}" />
+                    <TextBlock Text="Один раз подтвердите доступ кнопкой громкости «+» на корпусе SberBoom. Токен сохранится, дальше подключение автоматическое."
+                               FontSize="13" TextWrapping="Wrap" TextAlignment="Center"
+                               Foreground="{ThemeResource AppTextMuted}" />
+                    <ProgressRing IsActive="True" Width="20" Height="20"
+                                  Foreground="{ThemeResource AppAccent}" />
+                    <Button Content="Отменить" Style="{StaticResource ChipButton}"
+                            HorizontalAlignment="Center" Click="CancelPairing_Click" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════ оверлей: состояние колонки ═══════════ -->
+        <Grid x:Name="DeviceOverlay" Visibility="Collapsed" Background="#99000000">
+            <Border Background="{ThemeResource AppSurface}" CornerRadius="28" Padding="22"
+                    HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="12" MaxHeight="520">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Колонка" FontSize="20" FontWeight="SemiBold"
+                               Foreground="{ThemeResource AppText}" />
+                    <ScrollViewer Grid.Row="1" Margin="0,10,0,0">
+                        <StackPanel x:Name="DeviceDetails" Spacing="6" />
+                    </ScrollViewer>
+                    <Button Grid.Row="2" Content="Закрыть" Style="{StaticResource ChipButton}"
+                            HorizontalAlignment="Right" Margin="0,12,0,0" Click="CloseDevicePanel_Click" />
+                </Grid>
+            </Border>
+        </Grid>
+        <!-- строка уведомления -->
+        <InfoBar x:Name="Notice" IsOpen="False" Severity="Informational" IsClosable="True"
+                 VerticalAlignment="Bottom" Margin="12" />
+    </Grid>
+</Window>

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Заглушки MSBuild-задач из Windows App SDK / Visual Studio.
+    Их DLL (Microsoft.Build.AppxPackage.dll, Microsoft.Build.Packaging.Pri.Tasks.dll)
+    поставляются только с Visual Studio + UWP-workload, а нам нужна сборка WinUI 3
+    обычным `dotnet build` без установки VS. Для распакованного (unpackaged)
+    приложения PRI-индексация и упаковка AppX не нужны, поэтому задачи сводятся
+    к тождественным операциям. Подключаются через AppxMSBuildTaskAssembly и
+    PriProjTaskAssembly в SberBoom.WinUI.csproj.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>MSBuildShims</AssemblyName>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Framework" Version="17.11.4" PrivateAssets="all" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.11.4" PrivateAssets="all" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+</Project>
