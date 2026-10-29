@@ -89,6 +89,7 @@ fun PlayerScreen(
     var showHistory by remember { mutableStateOf(false) }
     var showDiagnostics by remember { mutableStateOf(false) }
     var sleepOpen by remember { mutableStateOf(false) }
+    var phoneOpen by remember { mutableStateOf(false) }
     var tick by remember { mutableStateOf(System.currentTimeMillis()) }
 
     // Очередь: для Bluetooth-источника её нет — подбираем похожие треки в Звуке.
@@ -119,7 +120,11 @@ fun PlayerScreen(
                 .height(440.dp)
                 .background(
                     Brush.verticalGradient(
-                        listOf(ambient.copy(alpha = 0.42f), ambient.copy(alpha = 0.08f), Color.Transparent),
+                        listOf(
+                            ambient.copy(alpha = if (ThemeMode.light) 0.18f else 0.42f),
+                            ambient.copy(alpha = if (ThemeMode.light) 0.04f else 0.08f),
+                            Color.Transparent,
+                        ),
                     ),
                 ),
         )
@@ -168,7 +173,7 @@ fun PlayerScreen(
                         Text(
                             modelLine,
                             style = MaterialTheme.typography.labelMedium,
-                            color = Muted.copy(alpha = 0.7f),
+                            color = Muted.copy(alpha = if (ThemeMode.light) 1f else 0.7f),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -227,6 +232,17 @@ fun PlayerScreen(
                             onClick = {
                                 menuOpen = false
                                 sleepOpen = true
+                            },
+                        )
+                        DropdownMenuItem(text = { Text("Играть с телефона (Bluetooth)") }, onClick = {
+                            menuOpen = false
+                            phoneOpen = true
+                        })
+                        DropdownMenuItem(
+                            text = { Text(if (state.lightTheme) "Тёмная тема" else "Светлая тема") },
+                            onClick = {
+                                menuOpen = false
+                                repo.setLightTheme(!state.lightTheme)
                             },
                         )
                         DropdownMenuItem(text = { Text("Недавнее") }, onClick = {
@@ -547,6 +563,13 @@ fun PlayerScreen(
                 state = state,
                 onRefresh = { repo.refresh() },
                 onDismiss = { showDiagnostics = false },
+            )
+        }
+
+        if (phoneOpen) {
+            PhonePlaybackDialog(
+                onEnablePairing = { repo.enableBluetoothPairing() },
+                onDismiss = { phoneOpen = false },
             )
         }
 

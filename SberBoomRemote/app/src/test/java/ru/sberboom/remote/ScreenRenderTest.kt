@@ -32,6 +32,8 @@ import ru.sberboom.remote.ui.HistoryPanel
 import ru.sberboom.remote.ui.SleepTimerDialog
 import ru.sberboom.remote.ui.PlayerScreen
 import ru.sberboom.remote.ui.SberBoomTheme
+import ru.sberboom.remote.ui.ThemeMode
+import ru.sberboom.remote.ui.PhonePlaybackDialog
 import ru.sberboom.remote.ui.SearchScreen
 import java.io.File
 
@@ -395,5 +397,56 @@ class ScreenRenderTest {
         }
         compose.waitForIdle()
         save("sleep_timer")
+    }
+
+    @Test
+    fun rendersPlayerLightTheme() {
+        ThemeMode.light = true
+        try {
+            val state = PlayerUiState(
+                connection = Connection.Connected,
+                host = "192.168.1.61",
+                deviceName = "SberBoom Mini",
+                deviceModel = "sberboom-mini",
+                deviceFirmware = "1.104.35",
+                lightTheme = true,
+                track = Track(
+                    title = "последнее лето",
+                    artists = listOf("ooes"),
+                    album = "мои (твои) тёмные желания",
+                    trackId = "60117",
+                    durationSec = 137,
+                    positionSec = 16,
+                    playing = true,
+                ),
+                volume = 42,
+                latencyMs = 12,
+            )
+            compose.setContent {
+                TestSurface {
+                    PlayerScreen(
+                        repo = repo(),
+                        state = state,
+                        onOpenSearch = {},
+                        onOpenConnect = {},
+                    )
+                }
+            }
+            compose.waitForIdle()
+            save("player_light")
+        } finally {
+            ThemeMode.light = false
+        }
+    }
+
+    @Test
+    fun rendersPhonePlaybackDialog() {
+        compose.setContent {
+            TestSurface {
+                PhonePlaybackDialog(onEnablePairing = {}, onDismiss = {})
+            }
+        }
+        compose.waitForIdle()
+        save("phone_playback")
     }
 }

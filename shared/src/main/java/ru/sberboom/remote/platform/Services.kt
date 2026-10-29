@@ -35,6 +35,9 @@ interface Settings {
     fun tokenFor(host: String): String?
     fun setToken(host: String, token: String?)
 
+    /** Светлая тема оформления (по умолчанию тёмная). */
+    var lightTheme: Boolean
+
     /** История прослушивания — JSON-массив, формат общий для обеих платформ. */
     var historyJson: String?
 

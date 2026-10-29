@@ -57,6 +57,10 @@ fun SberBoomRoot(repo: PlayerRepository) {
     var showSearch by rememberSaveable { mutableStateOf(false) }
     var forceConnect by rememberSaveable { mutableStateOf(false) }
 
+    LaunchedEffect(state.lightTheme) {
+        ThemeMode.light = state.lightTheme
+    }
+
     LaunchedEffect(state.noticeId) {
         val text = state.notice
         if (text != null) {
@@ -141,7 +145,11 @@ fun ConnectionBadge(connection: Connection, modifier: Modifier = Modifier) {
                 .background(color, CircleShape),
         )
         Spacer(Modifier.size(6.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium, color = color)
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = if (connection == Connection.Connected) AccentText else color,
+        )
     }
 }
 

@@ -44,6 +44,10 @@ class Prefs : Settings {
         get() = prefs.get("client_name", Settings.DEFAULT_CLIENT_NAME) ?: Settings.DEFAULT_CLIENT_NAME
         set(value) = prefs.put("client_name", value)
 
+    override var lightTheme: Boolean
+        get() = prefs.getBoolean("light_theme", false)
+        set(value) = prefs.putBoolean("light_theme", value)
+
     override var historyJson: String?
         get() = prefs.get("history", null)
         set(value) = setStr("history", value)

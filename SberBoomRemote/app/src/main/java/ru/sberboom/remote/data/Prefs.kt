@@ -129,6 +129,10 @@ class Prefs(context: Context) : Settings {
         sp.edit().remove("device_name").remove("device_model").remove("device_firmware").apply()
     }
 
+    override var lightTheme: Boolean
+        get() = sp.getBoolean("light_theme", false)
+        set(value) = sp.edit().putBoolean("light_theme", value).apply()
+
     /** История прослушивания (JSON) — общий формат с Windows-версией. */
     override var historyJson: String?
         get() = sp.getString("history", null)

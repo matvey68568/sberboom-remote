@@ -81,6 +81,8 @@ data class PlayerUiState(
     val lyricsInstrumental: Boolean = false,
     val lyricsLoading: Boolean = false,
     val karaokeFill: Boolean = true,
+    /** Светлая тема оформления. */
+    val lightTheme: Boolean = false,
     val history: List<HistoryEntry> = emptyList(),
     /** Время, когда таймер сна остановит колонку (мс), null — таймер выключен. */
     val sleepUntilMs: Long? = null,
@@ -127,6 +129,7 @@ class PlayerRepository(
             deviceModel = prefs.deviceModel,
             deviceFirmware = prefs.deviceFirmware,
             karaokeFill = prefs.karaokeFill,
+            lightTheme = prefs.lightTheme,
             history = readHistory(),
         ),
     )
@@ -466,6 +469,12 @@ class PlayerRepository(
     fun playHistory(entry: HistoryEntry) {
         val link = ZvukApi.deeplink("track", entry.trackId) ?: return
         playDeeplink(link)
+    }
+
+    /** Переключить тему: значение сразу уходит в настройки и в состояние. */
+    fun setLightTheme(on: Boolean) {
+        prefs.lightTheme = on
+        _state.update { it.copy(lightTheme = on) }
     }
 
     fun clearHistory() {

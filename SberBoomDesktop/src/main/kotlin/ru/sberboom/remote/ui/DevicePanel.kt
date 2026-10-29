@@ -64,7 +64,7 @@ fun DevicePanel(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.55f))
+            .background(Scrim)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
