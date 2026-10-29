@@ -38,6 +38,38 @@ Android подключает общий слой как модуль `:shared` (
   `Ctrl+M` — mute, медиа-клавиши клавиатуры
 - **Таймер сна, «Недавнее» и диагностика** — те же экраны, что на Android
 
+
+## Установка на Windows
+
+Два способа, оба без прав администратора не обязательны:
+
+| Файл | Что делает |
+|---|---|
+| `SberBoomRemote-Windows-1.x.msi` | обычный установщик: ярлык в меню «Пуск», пункт удаления в «Программы и компоненты», встроенная JVM |
+| `SberBoomRemote-Windows-1.x.zip` | портативная версия: распаковать и запустить `SberBoom Remote.exe` |
+
+SmartScreen может предупредить о неизвестном издателе — подпись не настроена, файлы
+собраны локально.
+
+### Сборка MSI
+
+jpackage собирает MSI только через WiX Toolset 3.14 (v4 не поддерживается). Установка
+в систему не обязательна — достаточно портативных бинарников:
+
+```bash
+# один раз: WiX 3.14 в ../tools/wix
+curl -L -o wix.zip https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314-binaries.zip
+unzip wix.zip -d ../tools/wix
+
+bash tools/build-msi.sh     # соберёт build/compose/binaries/main/msi/*.msi
+```
+
+Скрипт выставляет `WIX` и `PATH` так, чтобы `light.exe` находил `WixUtilExtension`
+(иначе jpackage падает с кодом 311), и требует полный JDK с `jpackage.exe`.
+
+Важно: описание пакета в `build.gradle.kts` — латиницей. Русский текст в метаданных
+MSI приводит к ошибке `light.exe` (код 311, недопустимые символы для кодовой страницы).
+
 ## Сборка
 
 ```bash

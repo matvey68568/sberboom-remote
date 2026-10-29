@@ -10,7 +10,7 @@ PIN-токен сохраняется локально.
 | Версия | Сборка | Готовый файл |
 |---|---|---|
 | Android | `SberBoomRemote/` (Gradle + AGP 9 + Compose) | `app-debug.apk` |
-| Windows | `SberBoomDesktop/` (Compose Desktop) | `SberBoom Remote.exe` (встроенная JVM) |
+| Windows | `SberBoomDesktop/` (Compose Desktop) | `SberBoom Remote.exe` (встроенная JVM), MSI-установщик |
 
 <p align="center">
   <img src="SberBoomRemote/docs/player.png" width="260" alt="Плеер">

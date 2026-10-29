@@ -54,7 +54,7 @@ compose.desktop {
             targetFormats(TargetFormat.Msi)
             packageName = "SberBoom Remote"
             packageVersion = "1.2.0"
-            description = "Локальное управление колонкой SberBoom"
+            description = "Local control for SberBoom speakers over Wi-Fi"
             vendor = "SberBoom Remote"
             windows {
                 menu = true

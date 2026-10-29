@@ -6,6 +6,7 @@ local.properties
 *.apk
 *.aab
 *.zip
+*.msi
 *.log
 
 # Готовые дистрибутивы
