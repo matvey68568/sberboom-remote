@@ -2,6 +2,8 @@ package ru.sberboom.remote.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -41,14 +42,13 @@ import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -141,11 +141,16 @@ fun PlayerScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     Modifier
-                        .size(38.dp)
-                        .background(Surface1, RoundedCornerShape(12.dp)),
+                        .size(42.dp)
+                        .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(16.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Rounded.Speaker, null, tint = SberGreen, modifier = Modifier.size(20.dp))
+                    Icon(
+                        Icons.Rounded.Speaker,
+                        null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(22.dp),
+                    )
                 }
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
@@ -179,13 +184,17 @@ fun PlayerScreen(
                         )
                     }
                 }
-                IconButton(onClick = onOpenSearch) {
-                    Icon(Icons.Rounded.Search, "Поиск в Звуке", tint = MaterialTheme.colorScheme.onBackground)
-                }
+                ExpressiveChip(
+                    icon = Icons.Rounded.Search,
+                    onClick = onOpenSearch,
+                    contentDescription = "Поиск в Звуке",
+                )
                 Box {
-                    IconButton(onClick = { menuOpen = true }) {
-                        Icon(Icons.Rounded.MoreVert, "Ещё", tint = MaterialTheme.colorScheme.onBackground)
-                    }
+                    ExpressiveChip(
+                        icon = Icons.Rounded.MoreVert,
+                        onClick = { menuOpen = true },
+                        contentDescription = "Ещё",
+                    )
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                         DropdownMenuItem(text = { Text("Колонка: состояние") }, onClick = {
                             menuOpen = false
@@ -270,12 +279,14 @@ fun PlayerScreen(
             }
 
             // ───── обложка ─────
+            val coverInteraction = remember { MutableInteractionSource() }
             Box(
                 Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
-                    .clip(RoundedCornerShape(28.dp))
-                    .clickable {
+                    .pressScale(coverInteraction, pressed = 0.97f)
+                    .clip(RoundedCornerShape(36.dp))
+                    .clickable(interactionSource = coverInteraction, indication = null) {
                         openQueue()
                     }
                     .background(
@@ -335,7 +346,7 @@ fun PlayerScreen(
             // ───── название ─────
             Text(
                 track?.title ?: if (state.isConnected) "Ничего не играет" else "Колонка не на связи",
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.headlineMedium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -354,7 +365,7 @@ fun PlayerScreen(
                 Text(
                     album,
                     style = MaterialTheme.typography.labelMedium,
-                    color = Muted.copy(alpha = 0.8f),
+                    color = Muted.copy(alpha = if (ThemeMode.light) 1f else 0.8f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -379,28 +390,31 @@ fun PlayerScreen(
 
             Spacer(Modifier.height(18.dp))
 
-            // ───── прогресс ─────
+            // ───── прогресс: волнистая полоса Expressive ─────
             val duration = track?.durationSec ?: 0
             if (duration > 0) {
                 var dragging by remember(track?.trackId) { mutableStateOf<Float?>(null) }
                 val position = dragging ?: (track?.livePositionSec(tick) ?: 0).toFloat()
-                Slider(
-                    value = position.coerceIn(0f, duration.toFloat()),
-                    onValueChange = { dragging = it },
-                    onValueChangeFinished = {
-                        dragging?.let { repo.seekTo(it.toInt()) }
+                WavyProgress(
+                    progress = (position / duration).coerceIn(0f, 1f),
+                    animated = track?.playing == true,
+                    onSeek = { f -> dragging = (f * duration).toInt().toFloat() },
+                    onSeekFinished = { f ->
+                        repo.seekTo((f * duration).toInt())
                         dragging = null
                     },
-                    valueRange = 0f..duration.toFloat(),
-                    colors = SliderDefaults.colors(
-                        thumbColor = SberGreen,
-                        activeTrackColor = SberGreen,
-                        inactiveTrackColor = Surface2,
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
                 )
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(fmtTime(position.toInt()), style = MaterialTheme.typography.labelMedium, color = Muted)
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 2.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        fmtTime((dragging ?: position).toInt()),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Muted,
+                    )
                     Text(fmtTime(duration), style = MaterialTheme.typography.labelMedium, color = Muted)
                 }
             } else {
@@ -413,83 +427,92 @@ fun PlayerScreen(
 
             Spacer(Modifier.height(10.dp))
 
-            // ───── транспорт ─────
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+            // ───── транспорт: плавающая пилюля ─────
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(44.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
             ) {
-                IconButton(onClick = { repo.setShuffle(!(track?.shuffle ?: false)) }) {
-                    Icon(
-                        Icons.Rounded.Shuffle,
-                        "Перемешать",
-                        tint = if (track?.shuffle == true) SberGreen else Muted,
-                    )
-                }
-                IconButton(onClick = { repo.prev() }, modifier = Modifier.size(56.dp)) {
-                    Icon(Icons.Rounded.SkipPrevious, "Предыдущий", tint = MaterialTheme.colorScheme.onBackground, modifier = Modifier.size(38.dp))
-                }
-                FilledIconButton(
-                    onClick = { repo.playPause() },
-                    modifier = Modifier.size(76.dp),
-                    shape = CircleShape,
-                    colors = androidx.compose.material3.IconButtonDefaults.filledIconButtonColors(
-                        containerColor = SberGreen,
-                        contentColor = Ink,
-                    ),
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(
-                        if (track?.playing == true) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                        "Играть / пауза",
-                        modifier = Modifier.size(40.dp),
+                    ExpressiveChip(
+                        icon = Icons.Rounded.Shuffle,
+                        onClick = { repo.setShuffle(!(track?.shuffle ?: false)) },
+                        selected = track?.shuffle == true,
+                        contentDescription = "Перемешать",
                     )
-                }
-                IconButton(onClick = { repo.next() }, modifier = Modifier.size(56.dp)) {
-                    Icon(Icons.Rounded.SkipNext, "Следующий", tint = MaterialTheme.colorScheme.onBackground, modifier = Modifier.size(38.dp))
-                }
-                IconButton(onClick = { repo.cycleRepeat() }) {
+                    IconButton(onClick = { repo.prev() }, modifier = Modifier.size(52.dp)) {
+                        Icon(
+                            Icons.Rounded.SkipPrevious,
+                            "Предыдущий",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(36.dp),
+                        )
+                    }
+                    PlayButton(
+                        playing = track?.playing == true,
+                        onClick = { repo.playPause() },
+                    )
+                    IconButton(onClick = { repo.next() }, modifier = Modifier.size(52.dp)) {
+                        Icon(
+                            Icons.Rounded.SkipNext,
+                            "Следующий",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(36.dp),
+                        )
+                    }
                     val repeat = PlayerRepository.repeatCanonical(track?.repeat)
-                    Icon(
-                        if (repeat == "track") Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
-                        "Повтор",
-                        tint = if (repeat == "off") Muted else SberGreen,
+                    ExpressiveChip(
+                        icon = if (repeat == "track") Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
+                        onClick = { repo.cycleRepeat() },
+                        selected = repeat != "off",
+                        contentDescription = "Повтор",
                     )
                 }
             }
 
             Spacer(Modifier.height(8.dp))
 
-            // ───── лайк / скорость / пульт / BT ─────
+            // ───── лайк / скорость / пульт / BT: чипы ─────
             Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = {
-                    showLyrics = true
-                    if (state.lyrics.isEmpty() && !state.lyricsLoading) repo.reloadLyrics()
-                }) {
-                    Icon(
-                        Icons.Rounded.Lyrics,
-                        "Текст песни",
-                        tint = if (state.lyrics.isNotEmpty()) SberGreen else Muted,
-                    )
-                }
-                IconButton(onClick = { repo.toggleLike() }) {
-                    Icon(Icons.Rounded.ThumbUp, "Нравится", tint = if (track?.liked == true) SberGreen else Muted)
-                }
-                IconButton(onClick = { repo.dislike() }) {
-                    Icon(Icons.Rounded.ThumbDown, "Не нравится", tint = Muted)
-                }
+                ExpressiveChip(
+                    icon = Icons.Rounded.Lyrics,
+                    onClick = {
+                        showLyrics = true
+                        if (state.lyrics.isEmpty() && !state.lyricsLoading) repo.reloadLyrics()
+                    },
+                    selected = state.lyrics.isNotEmpty(),
+                    contentDescription = "Текст песни",
+                )
+                ExpressiveChip(
+                    icon = Icons.Rounded.ThumbUp,
+                    onClick = { repo.toggleLike() },
+                    selected = track?.liked == true,
+                    contentDescription = "Нравится",
+                )
+                ExpressiveChip(
+                    icon = Icons.Rounded.ThumbDown,
+                    onClick = { repo.dislike() },
+                    contentDescription = "Не нравится",
+                )
                 Box {
-                    TextButton(onClick = { speedOpen = true }) {
-                        Text(
-                            "${formatSpeed(track?.speed ?: 1f)}×",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = Muted,
-                        )
-                        Icon(Icons.Rounded.KeyboardArrowDown, null, tint = Muted, modifier = Modifier.size(18.dp))
-                    }
+                    ExpressiveChip(
+                        icon = Icons.Rounded.KeyboardArrowDown,
+                        onClick = { speedOpen = true },
+                        label = "${formatSpeed(track?.speed ?: 1f)}×",
+                        contentDescription = "Скорость воспроизведения",
+                    )
                     DropdownMenu(expanded = speedOpen, onDismissRequest = { speedOpen = false }) {
                         listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f).forEach { rate ->
                             DropdownMenuItem(
@@ -502,28 +525,31 @@ fun PlayerScreen(
                         }
                     }
                 }
-                IconButton(onClick = { repo.findRemote() }) {
-                    Icon(Icons.Rounded.SettingsRemote, "Найти пульт", tint = Muted)
-                }
-                IconButton(onClick = {
-                    showBt = true
-                    repo.refreshBtDevices()
-                }) {
-                    Icon(Icons.Rounded.Bluetooth, "Bluetooth-сопряжение", tint = Muted)
-                }
+                ExpressiveChip(
+                    icon = Icons.Rounded.SettingsRemote,
+                    onClick = { repo.findRemote() },
+                    contentDescription = "Найти пульт",
+                )
+                ExpressiveChip(
+                    icon = Icons.Rounded.Bluetooth,
+                    onClick = {
+                        showBt = true
+                        repo.refreshBtDevices()
+                    },
+                    contentDescription = "Bluetooth-сопряжение",
+                )
             }
 
             Spacer(Modifier.height(10.dp))
 
             // ───── громкость ─────
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { repo.toggleMute() }) {
-                    Icon(
-                        if (state.muted || state.volume == 0) Icons.Rounded.VolumeOff else Icons.Rounded.VolumeUp,
-                        "Звук",
-                        tint = if (state.muted) MaterialTheme.colorScheme.error else Muted,
-                    )
-                }
+                ExpressiveChip(
+                    icon = if (state.muted || state.volume == 0) Icons.Rounded.VolumeOff else Icons.Rounded.VolumeUp,
+                    onClick = { repo.toggleMute() },
+                    selected = state.muted,
+                    contentDescription = "Звук",
+                )
                 Slider(
                     value = state.volume.toFloat(),
                     onValueChange = { repo.setVolume(it.toInt()) },
@@ -531,9 +557,11 @@ fun PlayerScreen(
                     colors = SliderDefaults.colors(
                         thumbColor = SberGreen,
                         activeTrackColor = SberGreen,
-                        inactiveTrackColor = Surface2,
+                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                     ),
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 8.dp),
                 )
                 Text(
                     "${state.volume}%",
@@ -690,5 +718,32 @@ private fun sourceLabel(track: Track?): String? {
         ).joinToString(" · ")
         track.provider == "zvuk" -> "Sber Звук"
         else -> null
+    }
+}
+
+/**
+ * Главная кнопка Expressive: не круг, а «скворикс» — квадрат со скруглёнными
+ * углами, который на нажатие проседает и возвращается с перелётом.
+ */
+@Composable
+private fun PlayButton(playing: Boolean, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .size(68.dp)
+            .pressScale(interaction, pressed = 0.9f),
+        shape = RoundedCornerShape(24.dp),
+        color = SberGreen,
+        contentColor = Ink,
+        interactionSource = interaction,
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                "Играть / пауза",
+                modifier = Modifier.size(38.dp),
+            )
+        }
     }
 }

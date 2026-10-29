@@ -95,7 +95,8 @@ class ScreenRenderTest {
                 provider = "zvuk",
                 durationSec = 294,
                 positionSec = 68,
-                playing = false,
+                // играет — чтобы на скриншоте была видна волнистая полоса Expressive
+                playing = true,
                 shuffle = true,
                 repeat = "playlist",
                 liked = true,

@@ -88,6 +88,42 @@ Android подключает его как Gradle-модуль `:shared`, Window
 
 ![Колонка](docs/device.png)
 
+## Ветка `material-3-expressive`
+
+Редизайн интерфейса в стилистике **Material 3 Expressive**. Живёт в отдельной ветке,
+`main` остаётся на прежнем оформлении — сравнить можно, переключив ветку.
+
+Что изменилось в оформлении:
+
+- **Палитра** — полный набор контейнерных ролей M3 (`surfaceContainerLowest…Highest`,
+  `secondaryContainer`, `tertiary`, `inverseSurface`): карточки и чипы теперь отделяются
+  от фона цветом, а не обводкой. Светлая тема пересчитана под тот же набор.
+- **Типографика** — Expressive-шкала: `displayLarge 48`, `displayMedium 40`,
+  `displaySmall 34`, заголовки жирнее и с отрицательным трекингом.
+- **Форма** — крупные радиусы (extraLarge 36 dp), кнопки-пилюли и «сквориклы».
+- **Движение** — пружины вместо линейных переходов: нажатие «продавливает» элемент
+  и возвращается с перелётом (`Modifier.pressScale`), экраны меняются через
+  `AnimatedContent` со scale+fade.
+- **Волнистый прогресс** — `WavyProgress`: по прошедшей части трека бежит синусоида,
+  амплитуда дышит, на паузе волна схлопывается в линию; тап и перетаскивание — перемотка.
+  Сделано на Canvas, потому что библиотечный `LinearWavyProgressIndicator` есть не на всех
+  платформах, а этот код общий для Android и Windows.
+- **Чипы-переключатели** — `ExpressiveChip`: shuffle, повтор, лайк, текст, скорость,
+  пульт, Bluetooth; выбранное состояние заливается `primaryContainer`.
+- **Транспорт** — плавающая пилюля `surfaceContainerHigh` с крупной кнопкой-сквориклом.
+
+Собрать обе версии из ветки:
+
+```bash
+git checkout material-3-expressive
+
+cd SberBoomRemote && ./gradlew :app:testDebugUnitTest :app:assembleDebug
+cd ../SberBoomDesktop && python tools/sync-ui.py && ./gradlew createDistributable
+```
+
+`Expressive.kt` (общий для платформ) содержит `pressScale`, `ExpressiveChip`,
+`WavyProgress`, `ExpressiveSection`; пружины и кривые — в `Theme.kt` (`object Motion`).
+
 ## Сборка
 
 Нужны JDK 17+ и Android SDK (platform 37, build-tools 36).

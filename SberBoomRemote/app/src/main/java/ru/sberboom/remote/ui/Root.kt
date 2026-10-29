@@ -1,6 +1,11 @@
 package ru.sberboom.remote.ui
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -89,25 +94,41 @@ fun SberBoomRoot(repo: PlayerRepository) {
                     .padding(padding),
             ) {
                 CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
-                    when {
-                        showSearch -> SearchScreen(
-                            repo = repo,
-                            onBack = { showSearch = false },
-                        )
+                    val screen = when {
+                        showSearch -> "search"
+                        needsSetup -> "connect"
+                        else -> "player"
+                    }
+                    AnimatedContent(
+                        targetState = screen,
+                        transitionSpec = {
+                            (
+                                fadeIn(animationSpec = Motion.smooth()) +
+                                    scaleIn(initialScale = 0.94f, animationSpec = Motion.bouncy())
+                                ).togetherWith(fadeOut(animationSpec = Motion.snappy()))
+                        },
+                        label = "screen",
+                    ) { target ->
+                        when (target) {
+                            "search" -> SearchScreen(
+                                repo = repo,
+                                onBack = { showSearch = false },
+                            )
 
-                        needsSetup -> ConnectScreen(
-                            repo = repo,
-                            connection = state.connection,
-                            host = state.host,
-                            onCancel = { forceConnect = false },
-                        )
+                            "connect" -> ConnectScreen(
+                                repo = repo,
+                                connection = state.connection,
+                                host = state.host,
+                                onCancel = { forceConnect = false },
+                            )
 
-                        else -> PlayerScreen(
-                            repo = repo,
-                            state = state,
-                            onOpenSearch = { showSearch = true },
-                            onOpenConnect = { forceConnect = true },
-                        )
+                            else -> PlayerScreen(
+                                repo = repo,
+                                state = state,
+                                onOpenSearch = { showSearch = true },
+                                onOpenConnect = { forceConnect = true },
+                            )
+                        }
                     }
                 }
             }
@@ -166,7 +187,7 @@ fun PairingCard(onCancel: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color(0xFF121A22), RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(28.dp))
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -174,14 +195,14 @@ fun PairingCard(onCancel: () -> Unit, modifier: Modifier = Modifier) {
             Modifier
                 .scale(scale)
                 .size(96.dp)
-                .background(SberGreen.copy(alpha = 0.12f), CircleShape),
+                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 Icons.Rounded.Speaker,
                 contentDescription = null,
-                tint = SberGreen,
-                modifier = Modifier.size(44.dp),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(48.dp),
             )
         }
         Spacer(Modifier.height(18.dp))
@@ -221,15 +242,19 @@ fun ConnectionLostBanner(onRetry: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.error.copy(alpha = 0.12f), RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(20.dp))
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.WifiOff, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
+            Icon(Icons.Rounded.WifiOff, null, tint = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.size(18.dp))
             Spacer(Modifier.size(8.dp))
-            Text("Нет связи с колонкой", style = MaterialTheme.typography.bodyMedium)
+            Text(
+                "Нет связи с колонкой",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+            )
         }
         androidx.compose.material3.TextButton(onClick = onRetry) { Text("Повторить") }
     }

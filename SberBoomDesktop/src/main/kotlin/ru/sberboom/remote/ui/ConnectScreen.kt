@@ -77,9 +77,23 @@ fun ConnectScreen(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 24.dp),
     ) {
+        Box(
+            Modifier
+                .size(64.dp)
+                .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(22.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                Icons.Rounded.Speaker,
+                null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(34.dp),
+            )
+        }
+        Spacer(Modifier.height(16.dp))
         Text(
             "SberBoom",
-            style = MaterialTheme.typography.displaySmall,
+            style = MaterialTheme.typography.displayLarge,
             color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(Modifier.height(6.dp))
@@ -97,7 +111,7 @@ fun ConnectScreen(
             Connection.Connecting, Connection.Reconnecting -> Row(
                 Modifier
                     .fillMaxWidth()
-                    .background(Surface1, RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(24.dp))
                     .padding(20.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -112,12 +126,20 @@ fun ConnectScreen(
             is Connection.Failed -> Column(
                 Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f), RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(24.dp))
                     .padding(20.dp),
             ) {
-                Text("Не удалось подключиться", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "Не удалось подключиться",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                )
                 Spacer(Modifier.height(6.dp))
-                Text(error.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = Muted)
+                Text(
+                    error.orEmpty(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.85f),
+                )
                 Spacer(Modifier.height(12.dp))
                 Row {
                     Button(onClick = {
@@ -137,14 +159,14 @@ fun ConnectScreen(
             val saved = repo.knownSpeakers
             if (saved.isNotEmpty()) {
                 Spacer(Modifier.height(18.dp))
-                Text("Мои колонки", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(8.dp))
+                Text("Мои колонки", style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(10.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     saved.forEach { known ->
                         Row(
                             Modifier
                                 .fillMaxWidth()
-                                .background(Surface1, RoundedCornerShape(18.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(24.dp))
                                 .clickable {
                                     ip = known.host
                                     repo.connect(
@@ -160,11 +182,16 @@ fun ConnectScreen(
                         ) {
                             Box(
                                 Modifier
-                                    .size(38.dp)
-                                    .background(SberGreen.copy(alpha = 0.12f), RoundedCornerShape(12.dp)),
+                                    .size(42.dp)
+                                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(16.dp)),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Icon(Icons.Rounded.Speaker, null, tint = SberGreen, modifier = Modifier.size(20.dp))
+                                Icon(
+                                    Icons.Rounded.Speaker,
+                                    null,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(22.dp),
+                                )
                             }
                             Spacer(Modifier.width(14.dp))
                             Column(Modifier.weight(1f)) {
@@ -192,7 +219,7 @@ fun ConnectScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Колонки в сети", style = MaterialTheme.typography.titleMedium)
+                Text("Колонки в сети", style = MaterialTheme.typography.titleLarge)
                 OutlinedButton(onClick = { scope.launch { scan() } }, enabled = !scanning) {
                     if (scanning) {
                         CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
@@ -220,7 +247,7 @@ fun ConnectScreen(
                         Row(
                             Modifier
                                 .fillMaxWidth()
-                                .background(Surface1, RoundedCornerShape(18.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(24.dp))
                                 .clickable {
                                     ip = device.host
                                     repo.connect(
@@ -236,11 +263,16 @@ fun ConnectScreen(
                         ) {
                             Box(
                                 Modifier
-                                    .size(38.dp)
-                                    .background(SberGreen.copy(alpha = 0.12f), RoundedCornerShape(12.dp)),
+                                    .size(42.dp)
+                                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(16.dp)),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Icon(Icons.Rounded.Speaker, null, tint = SberGreen, modifier = Modifier.size(20.dp))
+                                Icon(
+                                    Icons.Rounded.Speaker,
+                                    null,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(22.dp),
+                                )
                             }
                             Spacer(Modifier.width(14.dp))
                             Column(Modifier.weight(1f)) {
@@ -258,7 +290,7 @@ fun ConnectScreen(
             }
 
             Spacer(Modifier.height(28.dp))
-            Text("Или введите адрес вручную", style = MaterialTheme.typography.titleMedium)
+            Text("Или введите адрес вручную", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(10.dp))
             OutlinedTextField(
                 value = ip,
@@ -268,7 +300,7 @@ fun ConnectScreen(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
             )
             Spacer(Modifier.height(12.dp))
             Button(
@@ -276,13 +308,13 @@ fun ConnectScreen(
                 enabled = ip.isNotBlank(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(16.dp),
+                    .height(56.dp),
+                shape = RoundedCornerShape(28.dp),
                 colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    containerColor = SberGreen,
-                    contentColor = Ink,
-                    disabledContainerColor = Surface2,
-                    disabledContentColor = Muted,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
             ) {
                 Text("Подключиться", style = MaterialTheme.typography.titleMedium)
