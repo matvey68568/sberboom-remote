@@ -69,7 +69,6 @@ object Requests {
     val GET_METADATA = Tlv.emptyRequest(Proto.OP_GET_META_DATA)
     val GET_QUEUE = Tlv.emptyRequest(Proto.OP_GET_PLAYING_QUEUE)
     val GET_PAIRED_BT = Tlv.emptyRequest(Proto.OP_GET_PAIRED_BT)
-    val FIND_REMOTE = Tlv.emptyRequest(Proto.OP_FIND_REMOTE)
     val BT_DISCOVERABLE = Tlv.emptyRequest(Proto.OP_BT_DISCOVERABLE)
     val KEEP_ALIVE = Tlv.emptyRequest(Proto.OP_KEEP_ALIVE)
     val PAIR_INIT = Tlv.emptyRequest(Proto.OP_PIN_CONNECT)

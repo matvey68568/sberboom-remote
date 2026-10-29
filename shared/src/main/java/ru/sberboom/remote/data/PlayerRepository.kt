@@ -603,11 +603,6 @@ class PlayerRepository(
         }
     }
 
-    fun findRemote() {
-        send(Requests.FIND_REMOTE)
-        notice("Колонка ищет пульт")
-    }
-
     fun enableBluetoothPairing() {
         send(Requests.BT_DISCOVERABLE)
         notice("Режим сопряжения Bluetooth включён — ищите колонку на телефоне")

@@ -30,7 +30,6 @@ import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RepeatOne
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.SettingsRemote
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
@@ -214,10 +213,6 @@ fun PlayerScreen(
                         DropdownMenuItem(text = { Text("Сменить колонку") }, onClick = {
                             menuOpen = false
                             onOpenConnect()
-                        })
-                        DropdownMenuItem(text = { Text("Найти пульт") }, onClick = {
-                            menuOpen = false
-                            repo.findRemote()
                         })
                         DropdownMenuItem(text = { Text("Текст песни") }, onClick = {
                             menuOpen = false
@@ -527,11 +522,6 @@ fun PlayerScreen(
                         }
                     }
                 }
-                ExpressiveChip(
-                    icon = Icons.Rounded.SettingsRemote,
-                    onClick = { repo.findRemote() },
-                    contentDescription = "Найти пульт",
-                )
                 ExpressiveChip(
                     icon = Icons.Rounded.Bluetooth,
                     onClick = {
