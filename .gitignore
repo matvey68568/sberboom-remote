@@ -38,3 +38,6 @@ tools/msbuild-shims/bin/
 tools/msbuild-shims/obj/
 SberBoomWinUI3.ProtocolTests/bin/
 SberBoomWinUI3.ProtocolTests/obj/
+*.wixobj
+*.wixpdb
+SberBoomWinUI3/installer/Files.wxs
