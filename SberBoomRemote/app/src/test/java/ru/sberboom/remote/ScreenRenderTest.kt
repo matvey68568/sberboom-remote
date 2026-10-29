@@ -25,7 +25,11 @@ import ru.sberboom.remote.data.PlayerUiState
 import ru.sberboom.remote.protocol.DeviceState
 import ru.sberboom.remote.protocol.Source
 import ru.sberboom.remote.protocol.Track
+import ru.sberboom.remote.data.HistoryEntry
 import ru.sberboom.remote.ui.ConnectScreen
+import ru.sberboom.remote.ui.DiagnosticsPanel
+import ru.sberboom.remote.ui.HistoryPanel
+import ru.sberboom.remote.ui.SleepTimerDialog
 import ru.sberboom.remote.ui.PlayerScreen
 import ru.sberboom.remote.ui.SberBoomTheme
 import ru.sberboom.remote.ui.SearchScreen
@@ -335,5 +339,61 @@ class ScreenRenderTest {
         }
         compose.waitForIdle()
         save("search")
+    }
+
+    @Test
+    fun rendersHistoryPanel() {
+        val now = System.currentTimeMillis()
+        val entries = listOf(
+            HistoryEntry("137593089", "93", "Vtornik", null, now - 60_000),
+            HistoryEntry("183032438", "Thunderstruck", "AC/DC", null, now - 3_600_000),
+            HistoryEntry("999001", "Персональная волна", "Sber Звук", null, now - 86_400_000),
+        )
+        compose.setContent {
+            TestSurface {
+                HistoryPanel(entries = entries, onPlay = {}, onClear = {}, onDismiss = {})
+            }
+        }
+        compose.waitForIdle()
+        save("history")
+    }
+
+    @Test
+    fun rendersDiagnosticsPanel() {
+        val state = PlayerUiState(
+            connection = Connection.Connected,
+            host = "192.168.1.61",
+            deviceName = "SberBoom Mini",
+            deviceModel = "sberboom-mini",
+            deviceFirmware = "1.104.35",
+            deviceVendor = "SberDevices",
+            deviceSerial = "SMD00V00AA000000",
+            latencyMs = 12,
+            volume = 54,
+            history = List(7) { HistoryEntry("$it", "Трек $it", "Артист", null, 0L) },
+            sleepUntilMs = System.currentTimeMillis() + 25 * 60_000,
+        )
+        compose.setContent {
+            TestSurface {
+                DiagnosticsPanel(state = state, onRefresh = {}, onDismiss = {})
+            }
+        }
+        compose.waitForIdle()
+        save("diagnostics")
+    }
+
+    @Test
+    fun rendersSleepTimerDialog() {
+        compose.setContent {
+            TestSurface {
+                SleepTimerDialog(
+                    activeUntilMs = System.currentTimeMillis() + 20 * 60_000,
+                    onPick = {},
+                    onDismiss = {},
+                )
+            }
+        }
+        compose.waitForIdle()
+        save("sleep_timer")
     }
 }

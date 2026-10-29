@@ -86,6 +86,9 @@ fun PlayerScreen(
     var showQueue by remember { mutableStateOf(false) }
     var showLyrics by remember { mutableStateOf(false) }
     var showDevice by remember { mutableStateOf(false) }
+    var showHistory by remember { mutableStateOf(false) }
+    var showDiagnostics by remember { mutableStateOf(false) }
+    var sleepOpen by remember { mutableStateOf(false) }
     var tick by remember { mutableStateOf(System.currentTimeMillis()) }
 
     // Очередь: для Bluetooth-источника её нет — подбираем похожие треки в Звуке.
@@ -213,6 +216,27 @@ fun PlayerScreen(
                             menuOpen = false
                             showBt = true
                             repo.refreshBtDevices()
+                        })
+                        DropdownMenuItem(
+                            text = {
+                                val left = state.sleepUntilMs?.let {
+                                    ((it - System.currentTimeMillis()) / 60_000 + 1).coerceAtLeast(1)
+                                }
+                                Text(if (left != null) "Таймер сна: $left мин" else "Таймер сна")
+                            },
+                            onClick = {
+                                menuOpen = false
+                                sleepOpen = true
+                            },
+                        )
+                        DropdownMenuItem(text = { Text("Недавнее") }, onClick = {
+                            menuOpen = false
+                            showHistory = true
+                        })
+                        DropdownMenuItem(text = { Text("Диагностика связи") }, onClick = {
+                            menuOpen = false
+                            showDiagnostics = true
+                            repo.refresh()
                         })
                         DropdownMenuItem(text = { Text("Отключиться") }, onClick = {
                             menuOpen = false
@@ -504,6 +528,37 @@ fun PlayerScreen(
             }
 
             Spacer(Modifier.height(24.dp))
+        }
+
+        if (showHistory) {
+            HistoryPanel(
+                entries = state.history,
+                onPlay = { entry ->
+                    repo.playHistory(entry)
+                    showHistory = false
+                },
+                onClear = { repo.clearHistory() },
+                onDismiss = { showHistory = false },
+            )
+        }
+
+        if (showDiagnostics) {
+            DiagnosticsPanel(
+                state = state,
+                onRefresh = { repo.refresh() },
+                onDismiss = { showDiagnostics = false },
+            )
+        }
+
+        if (sleepOpen) {
+            SleepTimerDialog(
+                activeUntilMs = state.sleepUntilMs,
+                onPick = { minutes ->
+                    repo.setSleepTimer(minutes)
+                    sleepOpen = false
+                },
+                onDismiss = { sleepOpen = false },
+            )
         }
 
         if (showQueue) {

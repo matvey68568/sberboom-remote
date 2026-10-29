@@ -81,9 +81,21 @@ data class PlayerUiState(
     val lyricsInstrumental: Boolean = false,
     val lyricsLoading: Boolean = false,
     val karaokeFill: Boolean = true,
+    val history: List<HistoryEntry> = emptyList(),
+    /** Время, когда таймер сна остановит колонку (мс), null — таймер выключен. */
+    val sleepUntilMs: Long? = null,
 ) {
     val isConnected: Boolean get() = connection == Connection.Connected
 }
+
+/** Прослушанный трек для экрана «Недавнее». */
+data class HistoryEntry(
+    val trackId: String,
+    val title: String,
+    val artist: String,
+    val coverUrl: String?,
+    val atMs: Long,
+)
 
 /** Элемент очереди колонки, обогащённый метаданными каталога Звука. */
 data class QueueEntry(
@@ -115,6 +127,7 @@ class PlayerRepository(
             deviceModel = prefs.deviceModel,
             deviceFirmware = prefs.deviceFirmware,
             karaokeFill = prefs.karaokeFill,
+            history = readHistory(),
         ),
     )
     val state: StateFlow<PlayerUiState> = _state.asStateFlow()
@@ -130,6 +143,7 @@ class PlayerRepository(
     private var lyricsJob: Job? = null
     private var userClosed = false
     private var noticeCounter = 0
+    private var sleepJob: Job? = null
 
     val savedHost: String? get() = prefs.host
     val knownSpeakers: List<KnownSpeaker> get() = prefs.knownSpeakers
@@ -371,6 +385,7 @@ class PlayerRepository(
         _state.update { it.copy(track = merged) }
         resolveCover(merged)
         loadLyrics(merged)
+        if (merged.title != null && merged.trackId != prev?.trackId) rememberPlayed(merged)
     }
 
     /**
@@ -407,6 +422,87 @@ class PlayerRepository(
         }.onSuccess { ms ->
             _state.update { it.copy(latencyMs = ms) }
         }
+    }
+
+    // ───────────────────────────── сон и история ─────────────────────────────
+
+    /**
+     * Таймер сна: через N минут поставить колонку на паузу.
+     * null или 0 — выключить. Живёт в клиенте, протоколу не нужен.
+     */
+    fun setSleepTimer(minutes: Int?) {
+        sleepJob?.cancel()
+        sleepJob = null
+        if (minutes == null || minutes <= 0) {
+            _state.update { it.copy(sleepUntilMs = null) }
+            notice("Таймер сна выключен")
+            return
+        }
+        val until = System.currentTimeMillis() + minutes * 60_000L
+        _state.update { it.copy(sleepUntilMs = until) }
+        notice("Колонка остановится через $minutes мин")
+        sleepJob = scope.launch {
+            delay(minutes * 60_000L)
+            if (_state.value.track?.playing == true) send(Requests.media(Proto.MEDIA_PAUSE))
+            _state.update { it.copy(sleepUntilMs = null) }
+            notice("Таймер сна: воспроизведение остановлено")
+        }
+    }
+
+    private fun rememberPlayed(track: Track) {
+        val id = track.trackId ?: return
+        val entry = HistoryEntry(
+            trackId = id,
+            title = track.title.orEmpty(),
+            artist = track.artistLine,
+            coverUrl = _state.value.coverUrl,
+            atMs = System.currentTimeMillis(),
+        )
+        val updated = (listOf(entry) + _state.value.history.filterNot { it.trackId == id }).take(HISTORY_LIMIT)
+        _state.update { it.copy(history = updated) }
+        saveHistory(updated)
+    }
+
+    fun playHistory(entry: HistoryEntry) {
+        val link = ZvukApi.deeplink("track", entry.trackId) ?: return
+        playDeeplink(link)
+    }
+
+    fun clearHistory() {
+        _state.update { it.copy(history = emptyList()) }
+        saveHistory(emptyList())
+    }
+
+    private fun readHistory(): List<HistoryEntry> {
+        val raw = prefs.historyJson ?: return emptyList()
+        return runCatching {
+            val arr = org.json.JSONArray(raw)
+            (0 until arr.length()).mapNotNull { i ->
+                val o = arr.optJSONObject(i) ?: return@mapNotNull null
+                HistoryEntry(
+                    trackId = o.optString("id").takeIf { it.isNotEmpty() } ?: return@mapNotNull null,
+                    title = o.optString("title"),
+                    artist = o.optString("artist"),
+                    coverUrl = o.optString("cover").takeIf { it.isNotEmpty() },
+                    atMs = o.optLong("at"),
+                )
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    private fun saveHistory(list: List<HistoryEntry>) {
+        val arr = org.json.JSONArray()
+        list.forEach { e ->
+            arr.put(
+                org.json.JSONObject()
+                    .put("id", e.trackId)
+                    .put("title", e.title)
+                    .put("artist", e.artist)
+                    .put("cover", e.coverUrl ?: "")
+                    .put("at", e.atMs),
+            )
+        }
+        prefs.historyJson = arr.toString()
     }
 
     // ───────────────────────────── commands ─────────────────────────────
@@ -776,5 +872,8 @@ class PlayerRepository(
             "track", "one" -> "track"
             else -> "off"
         }
+
+        /** Сколько треков хранить в истории прослушивания. */
+        const val HISTORY_LIMIT = 40
     }
 }
