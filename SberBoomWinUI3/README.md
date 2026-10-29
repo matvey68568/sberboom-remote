@@ -1,8 +1,25 @@
 # SberBoom Remote для Windows — WinUI 3
 
-Windows-версия пульта SberBoom на **WinUI 3** (Windows App SDK 1.7, .NET 9, C#).
-Версия **1.3.1**. Пришла на смену Compose Desktop-сборке: тот же локальный протокол
-(`wss://<ip>:20000`), но нативное окно, нативные контролы и системная тема Windows.
+Windows-версия пульта SberBoom на **WinUI 3** (Windows App SDK 1.7, .NET 9, C#),
+оформленная по **Fluent Design System**. Версия **1.3.1**. Пришла на смену
+Compose Desktop-сборке: тот же локальный протокол (`wss://<ip>:20000`), но нативное
+окно, штатные контролы Windows и системная тема.
+
+## Оформление (Fluent Design System)
+
+- **Mica** — полупрозрачная подложка окна (`MicaBackdrop`, `MicaKind.BaseAlt`),
+  фон страницы прозрачный, контент «лежит» на подложке.
+- **Акцентный цвет системы** — кнопка воспроизведения и слайдеры используют
+  `AccentButtonStyle` и `AccentFillColorDefaultBrush`, то есть цвет из
+  «Параметры → Персонализация», а не захардкоженный бренд-цвет.
+- **Штатные контролы WinUI 3**: `Slider` (прогресс и громкость), `AccentButtonStyle`
+  для главного действия, `MenuFlyout` для меню, `ContentDialog` для панели состояния,
+  `InfoBar` для уведомлений и ошибок.
+- **Типографика Windows**: `TitleLargeTextBlockStyle`, `SubtitleTextBlockStyle`,
+  `BodyTextBlockStyle`, `CaptionTextBlockStyle` — Segoe UI Variable, системные размеры.
+- **Карточки и границы**: `CardBackgroundFillColorDefaultBrush` +
+  `CardStrokeColorDefaultBrush`, радиус 8 — как у карточек Windows 11.
+- **Тема заголовка окна** подстраивается под светлую/тёмную (`AppWindow.TitleBar`).
 
 ![Плеер](docs/player-winui3.png)
 
@@ -62,8 +79,8 @@ cp bin/Release/net9.0-windows10.0.26100.0/*.xbf dist/   # XBF не копиру�
 | `Protocol/StateParser.cs` | разбор JSON состояния `op=12` (активный плеер из `background_apps`) |
 | `Net/SpeakerClient.cs` | WebSocket-клиент: самоподписанный сертификат, ответы по `msg_id`, push-сопряжение |
 | `Net/Discovery.cs` | mDNS-запрос и TCP-скан подсети |
-| `Controls/WavyProgress.cs` | волнистый прогресс (синусоида, амплитуда, перемотка) |
 | `Data/Settings.cs` | `%APPDATA%\SberBoomRemote\settings.json` |
+| `MainWindow.xaml` | Fluent-разметка: Mica, штатные контролы, системная типографика |
 | `SberBoomWinUI3.ProtocolTests/` | консольная проверка протокола на живой колонке |
 
 Живая проверка протокола без UI:

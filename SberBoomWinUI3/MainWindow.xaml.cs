@@ -1,7 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.UI;
+using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -16,9 +18,12 @@ using Windows.UI;
 namespace SberBoom.WinUI;
 
 /// <summary>
-/// Окно приложения: экран подключения, плеер, панель состояния и сопряжение.
-/// Логика повторяет Android/Compose-версию: тот же протокол и команды,
-/// тот же порядок сопряжения (op=4 → «+» на колонке → op=6 с токеном).
+/// Окно в стиле Fluent Design System: Mica-подложка, штатные контролы WinUI 3
+/// (AccentButtonStyle, Slider, ContentDialog, InfoBar), системная типографика
+/// Segoe UI Variable и системный акцентный цвет.
+///
+/// Логика повторяет Android/Compose-версию: тот же протокол и порядок
+/// сопряжения (op=4 → «+» на колонке → op=6 с токеном).
 /// </summary>
 public sealed partial class MainWindow : Window
 {
@@ -28,11 +33,14 @@ public sealed partial class MainWindow : Window
     private readonly DispatcherTimer _refreshTimer = new() { Interval = TimeSpan.FromSeconds(2) };
     private readonly DispatcherTimer _keepAliveTimer = new() { Interval = TimeSpan.FromSeconds(20) };
     private readonly DispatcherTimer _tickTimer = new() { Interval = TimeSpan.FromSeconds(1) };
+    private readonly DispatcherTimer _seekTimer = new() { Interval = TimeSpan.FromMilliseconds(450) };
 
     private SpeakerClient? _client;
     private SpeakerState? _state;
     private string? _coverUrl;
-    private bool _volumeBusy;
+    private bool _updatingUi;
+    private bool _seekPending;
+    private int _seekTarget;
     private bool _shuffle;
     private string _repeat = "none";
     private bool _liked;
@@ -42,17 +50,25 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
         Title = "SberBoom Remote";
-        ResizeWindow(460, 900);
+        ResizeWindow(480, 900);
 
-        RootGrid.RequestedTheme = _settings.LightTheme ? ElementTheme.Light : ElementTheme.Dark;
-        ThemeMenuItem.Text = _settings.LightTheme ? "Тёмная тема" : "Светлая тема";
+        // Fluent: полупрозрачная Mica-подложка окна (Windows 11); на Windows 10
+        // контрол просто не включится — остаётся обычный фон.
+        try
+        {
+            SystemBackdrop = new MicaBackdrop { Kind = MicaKind.BaseAlt };
+        }
+        catch (Exception ex)
+        {
+            Program.Log("mica: " + ex.Message);
+        }
 
-        Progress.Seek += OnProgressSeek;
-        Progress.SeekFinished += OnProgressSeekFinished;
+        ApplyTheme();
 
         _refreshTimer.Tick += (_, _) => _ = RefreshAsync();
         _keepAliveTimer.Tick += (_, _) => _ = KeepAliveAsync();
-        _tickTimer.Tick += (_, _) => UpdateTimes();
+        _tickTimer.Tick += (_, _) => UpdatePosition();
+        _seekTimer.Tick += (_, _) => FlushSeek();
 
         HostBox.Text = _settings.Host ?? string.Empty;
         Program.Log("window ready");
@@ -73,6 +89,22 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             Program.Log("resize failed: " + ex.Message);
+        }
+    }
+
+    private void ApplyTheme()
+    {
+        RootGrid.RequestedTheme = _settings.LightTheme ? ElementTheme.Light : ElementTheme.Dark;
+        ThemeMenuItem.Text = _settings.LightTheme ? "Тёмная тема" : "Светлая тема";
+
+        // Заголовок окна в тон теме — часть Fluent-оформления
+        if (AppWindowTitleBar.IsCustomizationSupported())
+        {
+            var titleBar = AppWindow.TitleBar;
+            titleBar.ButtonForegroundColor = _settings.LightTheme ? Colors.Black : Colors.White;
+            titleBar.ButtonHoverBackgroundColor = _settings.LightTheme
+                ? Color.FromArgb(20, 0, 0, 0)
+                : Color.FromArgb(30, 255, 255, 255);
         }
     }
 
@@ -109,7 +141,7 @@ public sealed partial class MainWindow : Window
     private async Task ConnectAsync(string host, int port, string? token, bool remember)
     {
         ConnectButton.IsEnabled = false;
-        ConnectError.Visibility = Visibility.Collapsed;
+        ConnectErrorBar.IsOpen = false;
 
         try
         {
@@ -134,10 +166,10 @@ public sealed partial class MainWindow : Window
         }
         catch (AuthException)
         {
-            // PIN-токен живёт до следующего сопряжения: просим нажать «+» снова
+            // PIN-токен живёт до следующего сопряжения — просим нажать «+» снова
             _settings.SetToken(host, null);
             ShowConnectView();
-            ShowConnectError("Колонка не приняла токен — нажмите «+» на корпусе, чтобы сопрячься заново.");
+            ShowConnectError("Колонка не приняла токен. Нажмите «+» на корпусе и нажмите «Сопряжение».");
         }
         catch (Exception ex)
         {
@@ -163,8 +195,8 @@ public sealed partial class MainWindow : Window
 
     private void ShowConnectError(string message)
     {
-        ConnectError.Text = message;
-        ConnectError.Visibility = Visibility.Visible;
+        ConnectErrorBar.Message = message;
+        ConnectErrorBar.IsOpen = true;
     }
 
     private void OnClientClosed(string reason)
@@ -172,8 +204,7 @@ public sealed partial class MainWindow : Window
         DispatcherQueue.TryEnqueue(() =>
         {
             StatusText.Text = "Нет связи";
-            StatusDot.Fill = new SolidColorBrush(Color.FromArgb(255, 255, 138, 138));
-            Progress.Animated = false;
+            StatusDot.Fill = new SolidColorBrush(Color.FromArgb(255, 196, 43, 28));
             ShowNotice("Соединение с колонкой закрыто: " + reason);
         });
     }
@@ -258,43 +289,64 @@ public sealed partial class MainWindow : Window
     {
         var track = state.Track;
 
-        StatusText.Text = "На связи";
-        StatusDot.Fill = AccentBrush();
-
-        TrackTitle.Text = track?.Title ?? "Ничего не играет";
-        TrackArtist.Text = !string.IsNullOrEmpty(track?.ArtistLine) ? track!.ArtistLine : track?.StationName ?? "";
-        TrackAlbum.Text = track?.Album ?? "";
-
-        Buffering(track?.Buffering == true);
-
-        _shuffle = track?.Shuffle ?? false;
-        _repeat = track?.Repeat ?? "none";
-        _liked = track?.Liked ?? false;
-        if (track?.Speed is { } s) _speed = s;
-
-        ShuffleIcon.Foreground = _shuffle ? AccentBrush() : MutedBrush();
-        LikeIcon.Foreground = _liked ? AccentBrush() : MutedBrush();
-        RepeatIcon.Foreground = _repeat == "none" ? MutedBrush() : AccentBrush();
-        RepeatIcon.Glyph = _repeat == "track" ? "\uE8ED" : "\uE8EE";
-        SpeedText.Text = FormatSpeed(_speed);
-
-        PlayIcon.Glyph = track?.Playing == true ? "\uE769" : "\uE768";
-        Progress.Animated = track?.Playing == true;
-
-        if (!_volumeBusy)
+        _updatingUi = true;
+        try
         {
+            StatusText.Text = "На связи";
+            StatusDot.Fill = (Brush)Application.Current.Resources["AccentFillColorDefaultBrush"];
+
+            TrackTitle.Text = track?.Title ?? "Ничего не играет";
+            TrackArtist.Text = !string.IsNullOrEmpty(track?.ArtistLine) ? track!.ArtistLine : track?.StationName ?? "";
+            TrackAlbum.Text = track?.Album ?? "";
+
+            BufferRing.Visibility = track?.Buffering == true ? Visibility.Visible : Visibility.Collapsed;
+            BufferRing.IsActive = track?.Buffering == true;
+
+            _shuffle = track?.Shuffle ?? false;
+            _repeat = track?.Repeat ?? "none";
+            _liked = track?.Liked ?? false;
+            if (track?.Speed is { } s) _speed = s;
+
+            ShuffleIcon.Foreground = _shuffle ? AccentBrush() : MutedBrush();
+            LikeIcon.Foreground = _liked ? AccentBrush() : MutedBrush();
+            RepeatIcon.Foreground = _repeat == "none" ? MutedBrush() : AccentBrush();
+            RepeatIcon.Glyph = _repeat == "track" ? "\uE8ED" : "\uE8EE";
+            SpeedText.Text = FormatSpeed(_speed);
+
+            PlayIcon.Glyph = track?.Playing == true ? "\uE769" : "\uE768";
+
+            var label = SourceLabel(track);
+            SourceBadge.Visibility = label == null ? Visibility.Collapsed : Visibility.Visible;
+            if (label != null) SourceText.Text = label;
+
+            UpdateCover(track);
+
+            var duration = track?.DurationSec ?? 0;
+            if (duration > 0)
+            {
+                ProgressSlider.IsEnabled = true;
+                ProgressSlider.Maximum = duration;
+                if (!_seekPending) ProgressSlider.Value = Math.Clamp(track!.LivePositionSec(), 0, duration);
+                PositionText.Text = FormatTime((int)ProgressSlider.Value);
+                DurationText.Text = FormatTime(duration);
+            }
+            else
+            {
+                ProgressSlider.IsEnabled = false;
+                ProgressSlider.Value = 0;
+                PositionText.Text = "";
+                DurationText.Text = "прямой эфир";
+            }
+
             VolumeSlider.Value = state.Volume;
             VolumeText.Text = state.Volume + "%";
+            MuteIcon.Glyph = state.Muted || state.Volume == 0 ? "\uE74F" : "\uE767";
+            MuteIcon.Foreground = state.Muted ? ErrorBrush() : MutedBrush();
         }
-        MuteIcon.Glyph = state.Muted || state.Volume == 0 ? "\uE74F" : "\uE767";
-        MuteIcon.Foreground = state.Muted ? ErrorBrush() : MutedBrush();
-
-        var label = SourceLabel(track);
-        SourceBadge.Visibility = label == null ? Visibility.Collapsed : Visibility.Visible;
-        if (label != null) SourceText.Text = label;
-
-        UpdateCover(track);
-        UpdateProgressBar(track);
+        finally
+        {
+            _updatingUi = false;
+        }
     }
 
     private void UpdateCover(Track? track)
@@ -321,29 +373,23 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void UpdateProgressBar(Track? track)
+    private void UpdatePosition()
     {
+        var track = _state?.Track;
         var duration = track?.DurationSec ?? 0;
-        if (duration <= 0)
+        if (track == null || duration <= 0 || _seekPending) return;
+
+        var position = Math.Clamp(track.LivePositionSec(), 0, duration);
+        _updatingUi = true;
+        try
         {
-            Progress.Progress = 0;
-            Progress.Seekable = false;
-            PositionText.Text = "";
-            DurationText.Text = "прямой эфир";
-            return;
+            ProgressSlider.Value = position;
+            PositionText.Text = FormatTime(position);
         }
-
-        Progress.Seekable = true;
-        var position = track!.LivePositionSec();
-        Progress.Progress = Math.Clamp((double)position / duration, 0, 1);
-        PositionText.Text = FormatTime(position);
-        DurationText.Text = FormatTime(duration);
-    }
-
-    private void UpdateTimes()
-    {
-        if (_state?.Track == null) return;
-        UpdateProgressBar(_state.Track);
+        finally
+        {
+            _updatingUi = false;
+        }
     }
 
     // ─────────────────────────── команды ───────────────────────────
@@ -411,37 +457,35 @@ public sealed partial class MainWindow : Window
         ShowNotice("Колонка звенит — ищите пульт рядом");
     }
 
-    private void OnProgressSeek(object? sender, double fraction)
+    /// <summary>Перемотка: значение копится, команда уходит после паузы в 450 мс.</summary>
+    private void ProgressSlider_ValueChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
-        var duration = _state?.Track?.DurationSec ?? 0;
-        if (duration <= 0) return;
-        PositionText.Text = FormatTime((int)Math.Round(fraction * duration));
+        if (_updatingUi) return;
+        var value = (int)Math.Round(e.NewValue);
+        PositionText.Text = FormatTime(value);
+        _seekTarget = value;
+        _seekPending = true;
+        _seekTimer.Stop();
+        _seekTimer.Start();
     }
 
-    private void OnProgressSeekFinished(object? sender, double fraction)
+    private void FlushSeek()
     {
-        var duration = _state?.Track?.DurationSec ?? 0;
-        if (duration <= 0) return;
-        _ = CommandAsync(Requests.Seek((int)Math.Round(fraction * duration)));
+        _seekTimer.Stop();
+        if (!_seekPending) return;
+        _seekPending = false;
+        _ = CommandAsync(Requests.Seek(_seekTarget));
     }
 
     private async void VolumeSlider_ValueChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
         VolumeText.Text = (int)Math.Round(e.NewValue) + "%";
-        if (_state == null || _volumeBusy) return;
+        if (_updatingUi || _state == null) return;
 
         var value = (int)Math.Round(e.NewValue);
         if (Math.Abs(value - _state.Volume) < 1) return;
 
-        _volumeBusy = true;
-        try
-        {
-            await CommandAsync(Requests.Volume(value));
-        }
-        finally
-        {
-            _volumeBusy = false;
-        }
+        await CommandAsync(Requests.Volume(value));
     }
 
     // ─────────────────────────── сопряжение ───────────────────────────
@@ -460,8 +504,7 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        PairingOverlay.Visibility = Visibility.Visible;
-
+        var dialogTask = PairingDialog.ShowAsync();
         try
         {
             if (_client is not { IsOpen: true })
@@ -477,7 +520,7 @@ public sealed partial class MainWindow : Window
             _settings.Host = host;
             _settings.Save();
 
-            PairingOverlay.Visibility = Visibility.Collapsed;
+            PairingDialog.Hide();
 
             ShowPlayerView();
             UpdateHeader(host);
@@ -490,19 +533,23 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            PairingOverlay.Visibility = Visibility.Collapsed;
+            PairingDialog.Hide();
             ShowConnectView();
             ShowConnectError(ex.Message);
         }
+        finally
+        {
+            try { await dialogTask; } catch { /* диалог могли закрыть */ }
+        }
     }
 
-    private void CancelPairing_Click(object sender, RoutedEventArgs e)
+    private void CancelPairing_Click(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
-        PairingOverlay.Visibility = Visibility.Collapsed;
+        PairingDialog.Hide();
         _ = ReleaseClientAsync();
     }
 
-    // ─────────────────────────── поиск и UI ───────────────────────────
+    // ─────────────────────────── поиск и сервисные пункты ───────────────────────────
 
     private async void ScanButton_Click(object sender, RoutedEventArgs e)
     {
@@ -511,7 +558,6 @@ public sealed partial class MainWindow : Window
         ScanRing.IsActive = true;
         ScanStatus.Text = "Сканирую mDNS и порт 20000 в подсети…";
         SpeakersList.Items.Clear();
-        ForgetButton.Visibility = Visibility.Collapsed;
 
         try
         {
@@ -557,7 +603,6 @@ public sealed partial class MainWindow : Window
         var token = _settings.TokenFor(host);
         if (token == null)
         {
-            // без токена единственный путь — сопряжение кнопкой «+» на колонке
             _settings.Host = host;
             _settings.Save();
             await PairAsync();
@@ -593,6 +638,7 @@ public sealed partial class MainWindow : Window
         _refreshTimer.Stop();
         _keepAliveTimer.Stop();
         _tickTimer.Stop();
+        _seekTimer.Stop();
         if (_client != null)
         {
             _client.Closed -= OnClientClosed;
@@ -605,40 +651,41 @@ public sealed partial class MainWindow : Window
         CoverPlaceholder.Visibility = Visibility.Visible;
     }
 
-    private void MenuButton_Click(object sender, RoutedEventArgs e)
-    {
-        // меню открывается самим Flyout у кнопки
-    }
-
     private void Refresh_Click(object sender, RoutedEventArgs e) => _ = RefreshAsync();
 
-    private void DevicePanel_Click(object sender, RoutedEventArgs e)
+    private async void DevicePanel_Click(object sender, RoutedEventArgs e) => await ShowDeviceDialogAsync();
+
+    private async Task ShowDeviceDialogAsync()
     {
-        DeviceDetails.Children.Clear();
+        var device = _state?.Device;
+        var panel = new StackPanel { Spacing = 6 };
 
         void Row(string label, string? value)
         {
             if (string.IsNullOrWhiteSpace(value)) return;
-            var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-            line.Children.Add(new TextBlock
+            var line = new Grid();
+            line.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) });
+            line.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            var name = new TextBlock
             {
                 Text = label,
-                Width = 132,
-                FontSize = 13,
+                Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
                 Foreground = MutedBrush(),
-            });
-            line.Children.Add(new TextBlock
+            };
+            var text = new TextBlock
             {
                 Text = value,
-                FontSize = 13,
-                MaxWidth = 240,
+                Style = (Style)Application.Current.Resources["BodyTextBlockStyle"],
                 TextWrapping = TextWrapping.Wrap,
-                Foreground = TextBrush(),
-            });
-            DeviceDetails.Children.Add(line);
+                MaxWidth = 220,
+            };
+            Grid.SetColumn(text, 1);
+            line.Children.Add(name);
+            line.Children.Add(text);
+            panel.Children.Add(line);
         }
 
-        var device = _state?.Device;
         Row("Колонка", _settings.DeviceName);
         Row("Модель", _settings.DeviceModel);
         Row("Прошивка", _settings.DeviceFirmware);
@@ -652,18 +699,22 @@ public sealed partial class MainWindow : Window
         Row("Источник", _state?.Track?.Provider);
         Row("Скорость", _state?.Track?.Speed is { } sp ? FormatSpeed(sp) : null);
 
-        DeviceOverlay.Visibility = Visibility.Visible;
+        var dialog = new ContentDialog
+        {
+            XamlRoot = RootGrid.XamlRoot,
+            Title = "Колонка",
+            Content = new ScrollViewer { Content = panel, MaxHeight = 360 },
+            CloseButtonText = "Закрыть",
+            DefaultButton = ContentDialogButton.Close,
+        };
+        await dialog.ShowAsync();
     }
-
-    private void CloseDevicePanel_Click(object sender, RoutedEventArgs e) =>
-        DeviceOverlay.Visibility = Visibility.Collapsed;
 
     private void Theme_Click(object sender, RoutedEventArgs e)
     {
         _settings.LightTheme = !_settings.LightTheme;
         _settings.Save();
-        RootGrid.RequestedTheme = _settings.LightTheme ? ElementTheme.Light : ElementTheme.Dark;
-        ThemeMenuItem.Text = _settings.LightTheme ? "Тёмная тема" : "Светлая тема";
+        ApplyTheme();
     }
 
     private void ShowNotice(string message)
@@ -673,21 +724,11 @@ public sealed partial class MainWindow : Window
         Notice.IsOpen = true;
     }
 
-    private void Buffering(bool active)
-    {
-        BufferRing.Visibility = active ? Visibility.Visible : Visibility.Collapsed;
-        BufferRing.IsActive = active;
-    }
+    private static Brush AccentBrush() => (Brush)Application.Current.Resources["AccentTextFillColorPrimaryBrush"];
 
-    private static Brush Resource(string key) => (Brush)Application.Current.Resources[key];
+    private static Brush MutedBrush() => (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
 
-    private static Brush AccentBrush() => Resource("AppAccent");
-
-    private static Brush MutedBrush() => Resource("AppTextMuted");
-
-    private static Brush TextBrush() => Resource("AppText");
-
-    private static Brush ErrorBrush() => Resource("AppError");
+    private static Brush ErrorBrush() => (Brush)Application.Current.Resources["SystemFillColorCriticalBrush"];
 
     private static string? SourceLabel(Track? track)
     {
