@@ -1,0 +1,27 @@
+# Сборки и артефакты
+build/
+.gradle/
+.kotlin/
+local.properties
+*.apk
+*.aab
+*.zip
+*.log
+
+# Готовые дистрибутивы
+SberBoomRemote-Windows-*/
+
+# Сторонние репозитории и локальные инструменты (не часть проекта)
+sboom_ha/
+mini/
+tools/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+captures/
+
+# ОС
+Thumbs.db
+.DS_Store
