@@ -2,160 +2,160 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <Fragment>
         <DirectoryRef Id="INSTALLFOLDER">
-            <Component Id="cmpC7A71FDE11D954AAEF0945EC5B039573" Guid="6D2774B1-1013-48E3-AC51-830E2D58B278">
+            <Component Id="cmpC7A71FDE11D954AAEF0945EC5B039573" Guid="77C69223-109B-4AC3-93D2-4331CA5979A8">
                 <File Id="filDF300E8D7089175F09AFE607CA3AA9F7" KeyPath="yes" Source="$(var.SourceDir)\App.xbf" />
             </Component>
-            <Component Id="cmp35E04272D8F3CAF10236749C4768FFFC" Guid="19AE7C6B-33E5-4CBE-A760-FEA5048E13FB">
+            <Component Id="cmp35E04272D8F3CAF10236749C4768FFFC" Guid="953D59B5-0630-42FC-9FC9-309D28FBC5E1">
                 <File Id="fil6EA1ACECA6768DB9033AEB5F16085DC6" KeyPath="yes" Source="$(var.SourceDir)\MainWindow.xbf" />
             </Component>
-            <Component Id="cmp261E514EC041B92411503383EC709B89" Guid="995EC4FE-7BA4-4A92-9CC1-342654C032F4">
+            <Component Id="cmp261E514EC041B92411503383EC709B89" Guid="AFA20BAD-BC9D-48C4-B405-4424E6701F60">
                 <File Id="fil91CEE9D32CFC0308A81280FF6E139B94" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Graphics.Imaging.Projection.dll" />
             </Component>
-            <Component Id="cmp6D16CC6E020D35989F1BBCF1C1C368C6" Guid="FB0BA42D-87FC-418E-8453-93582B56EACA">
+            <Component Id="cmp6D16CC6E020D35989F1BBCF1C1C368C6" Guid="7A8BCDB2-66CC-4E05-9F1B-8B1D0C9624A1">
                 <File Id="filEE2072FD7166119BFCA5E6B5A4BC0977" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.InteractiveExperiences.Projection.dll" />
             </Component>
-            <Component Id="cmp091CDB9EBC5D12CD0EF1D3BD71A4C824" Guid="1913C00A-1278-4934-B7E3-0943E563084A">
+            <Component Id="cmp091CDB9EBC5D12CD0EF1D3BD71A4C824" Guid="5B89BBC3-C028-4596-902B-4D0DB4C7A8D8">
                 <File Id="fil762B3DE4F72339D5FA0BF52C0C51378D" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Security.Authentication.OAuth.Projection.dll" />
             </Component>
-            <Component Id="cmp57D856C08E480EBC080FF86FAEB1DDA3" Guid="3DB2F988-E226-4AF1-B271-C825692A3D8B">
+            <Component Id="cmp57D856C08E480EBC080FF86FAEB1DDA3" Guid="EECB442D-1E0F-4292-BD36-841C8B81E5C0">
                 <File Id="fil75A9AC5DE23858DE4AD4EE64AEAE4B4A" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Web.WebView2.Core.dll" />
             </Component>
-            <Component Id="cmp90C96461E1EED072570661AF74B0D0C6" Guid="29884F47-0675-41B7-8D9E-F197234873DA">
+            <Component Id="cmp90C96461E1EED072570661AF74B0D0C6" Guid="18254671-77DE-4A0E-A9DF-6BCC9B1510B2">
                 <File Id="fil1EB27E783ABB542499A20F0C2288CCEF" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Web.WebView2.Core.Projection.dll" />
             </Component>
-            <Component Id="cmp42D8D02EC966DCE8331E06FC82459D6D" Guid="CA6BE123-D165-475B-8810-FB7C5C0308CF">
+            <Component Id="cmp42D8D02EC966DCE8331E06FC82459D6D" Guid="07DBCF52-814C-488B-8B64-9AB9D5F2529F">
                 <File Id="fil0437EA453E75D111E23A50B2FE3CC806" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.AI.ContentSafety.Projection.dll" />
             </Component>
-            <Component Id="cmp2C8B3447E991C1EB857CCD384E49C2BB" Guid="F101AC6C-C709-40F5-A41A-E00988898598">
+            <Component Id="cmp2C8B3447E991C1EB857CCD384E49C2BB" Guid="51914237-1B8C-4308-945F-0DB0C802923E">
                 <File Id="fil18DFA3183210C08F4F18FB25BAAB2BAC" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.AI.Imaging.Projection.dll" />
             </Component>
-            <Component Id="cmp7CA73620D6DF6910B1F34A252DD5EC85" Guid="F4433C4A-8AEE-434B-B0A6-1F7492755A92">
+            <Component Id="cmp7CA73620D6DF6910B1F34A252DD5EC85" Guid="7C13343C-88A0-498A-8124-0EFAB39D9BF9">
                 <File Id="fil7ABE5EC611FA1A326802A252BB229319" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.AI.Projection.dll" />
             </Component>
-            <Component Id="cmpA83167922CAE85301AFDC810E1CDB55C" Guid="61FAE5D4-552D-4846-A2D7-2896228A2C6B">
+            <Component Id="cmpA83167922CAE85301AFDC810E1CDB55C" Guid="22A03975-460F-45E7-AD42-CC1D1ADC9F9F">
                 <File Id="fil414FA8ECA726F4D4335A020127C0E2E0" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.AI.Text.Projection.dll" />
             </Component>
-            <Component Id="cmp53A8456FC8331CAF99CE94A08EB21FBB" Guid="382A5A9C-9344-463B-A586-891C1523168C">
+            <Component Id="cmp53A8456FC8331CAF99CE94A08EB21FBB" Guid="C8459AC6-18F6-41B5-B371-300D4B650752">
                 <File Id="filB0896B2F7239D8D0B6B8BBB1AD5EEC45" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.ApplicationModel.Background.Projection.dll" />
             </Component>
-            <Component Id="cmp3B4A4E68A8916F10E057C64DCC9101A2" Guid="5D011142-EC5D-4016-A357-847D08BCA73D">
+            <Component Id="cmp3B4A4E68A8916F10E057C64DCC9101A2" Guid="E3CDE753-E429-4218-9BB8-49F3AC4EB1D5">
                 <File Id="fil00C67A68048660876465DF77E74AA2EA" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" />
             </Component>
-            <Component Id="cmpFC40A96231D4742B46282E916A215F18" Guid="BAA88482-2F21-4977-97E2-7A3E3F41ACA5">
+            <Component Id="cmpFC40A96231D4742B46282E916A215F18" Guid="D942BB8D-513F-489A-B34E-C8E043FEEF77">
                 <File Id="fil3237DCFAA63907B2318F549BBB41C194" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.ApplicationModel.Resources.Projection.dll" />
             </Component>
-            <Component Id="cmpBE11DC195E68C4B61A03D5E224F6E301" Guid="59DE85D2-BF38-4BD6-9DE3-B921F8B3B599">
+            <Component Id="cmpBE11DC195E68C4B61A03D5E224F6E301" Guid="B8C5DC04-F72C-473C-B95D-3702FB3C4BDA">
                 <File Id="filDA12B686B7F76B111AC9C08FB6EAAD94" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll" />
             </Component>
-            <Component Id="cmpAD6AC2F951F30234C560193BED5CE3FF" Guid="EA1B1BAD-72F5-4BDA-9EDB-C102F5D455D5">
+            <Component Id="cmpAD6AC2F951F30234C560193BED5CE3FF" Guid="ED9FC612-59CE-468F-9878-05CC172DEFD0">
                 <File Id="filB8E03F08DEE96DB0E7FA870DF8250C23" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.AppLifecycle.Projection.dll" />
             </Component>
-            <Component Id="cmp5369D906DD3FAD70F06836F495C2C16A" Guid="84B22834-4370-4D03-899E-18B820BCBF24">
+            <Component Id="cmp5369D906DD3FAD70F06836F495C2C16A" Guid="9D56C09F-D19D-4B86-BD89-2F6812BB3095">
                 <File Id="fil9D52098F4B3EF340183A029B96D649C0" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.AppNotifications.Builder.Projection.dll" />
             </Component>
-            <Component Id="cmpF18AC71FC2BB5B87372410046807D67F" Guid="567B16BF-7876-4519-A8A9-1FDBE2DDC87B">
+            <Component Id="cmpF18AC71FC2BB5B87372410046807D67F" Guid="DEE272DD-9D9F-4A1B-8DE8-11C69A347226">
                 <File Id="fil8E0D5D66FA479B0C0D48B125B868EDA2" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.AppNotifications.Projection.dll" />
             </Component>
-            <Component Id="cmpF9F18CA8B30093514822FDBD4A3A3061" Guid="E437601A-C8BD-4B9D-8BF5-2423C6FF86BD">
+            <Component Id="cmpF9F18CA8B30093514822FDBD4A3A3061" Guid="4A9B4F0D-9CF8-4503-B495-2FA47F50DEB3">
                 <File Id="fil37CB12CD1AA9F17B75CAD622F0471FB0" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.BadgeNotifications.Projection.dll" />
             </Component>
-            <Component Id="cmp0D0EA73969C24AFE63E87AD85696F4C9" Guid="C93E4A58-0D46-4BAC-AD72-A6990FFB6F7C">
+            <Component Id="cmp0D0EA73969C24AFE63E87AD85696F4C9" Guid="91D7FF67-BA9C-459A-A2A0-486350EB10A5">
                 <File Id="filEF2EFF72AE5969DB6F645840119EB3A0" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.Management.Deployment.Projection.dll" />
             </Component>
-            <Component Id="cmp6B0B94F4F3C9EA584291EF18A984765D" Guid="F740397B-307B-4996-B10E-31E5B5B4198B">
+            <Component Id="cmp6B0B94F4F3C9EA584291EF18A984765D" Guid="82CA7FC5-AD44-432B-8F04-4C5122E64064">
                 <File Id="filEF619A1AF43A3699655D07BDC5CF1619" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.Media.Capture.Projection.dll" />
             </Component>
-            <Component Id="cmpAC3239EC74C647D5D74BD36CAA4F64EB" Guid="B66901C3-BF21-4608-B2F7-C4CBACF2073D">
+            <Component Id="cmpAC3239EC74C647D5D74BD36CAA4F64EB" Guid="703C437B-F195-4B8F-92FC-EAADA9AE9AAE">
                 <File Id="filEB4E739B97014F310DF98893898C15C7" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.PushNotifications.Projection.dll" />
             </Component>
-            <Component Id="cmp5A07035FA52F4F9E1424BE35CC16915F" Guid="4C3FDC44-9D6F-4980-BEF2-336F312E5BCD">
+            <Component Id="cmp5A07035FA52F4F9E1424BE35CC16915F" Guid="5C294F76-8B50-43C9-8629-73D32EF98F6E">
                 <File Id="fil72C197D43EC7996E816CEB4279B7388C" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.SDK.NET.dll" />
             </Component>
-            <Component Id="cmpF29968FE27EC9EB4CD5EA07B32B5F62E" Guid="2EF0133F-6055-47C7-89AB-EC74AB623AD1">
+            <Component Id="cmpF29968FE27EC9EB4CD5EA07B32B5F62E" Guid="0B8C0BFC-FD5A-45C6-A09E-6560857CB206">
                 <File Id="filFEB9B141B17351F4FADACA41DC2CD480" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.Security.AccessControl.Projection.dll" />
             </Component>
-            <Component Id="cmp664B7726E564A432FA9F34C060CD7D46" Guid="0EE3C42A-FCE9-4239-9023-A22F4D4CC675">
+            <Component Id="cmp664B7726E564A432FA9F34C060CD7D46" Guid="FB402200-68DF-4AA3-9416-DD670A72690F">
                 <File Id="fil47F85540A90DDA39E95FA5F780ABE46B" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.Storage.Projection.dll" />
             </Component>
-            <Component Id="cmpC09E619A9E5EE4338C7192F704A1FBAE" Guid="A78F304B-8EAC-4547-821F-923258193ED3">
+            <Component Id="cmpC09E619A9E5EE4338C7192F704A1FBAE" Guid="3E0F3E30-23B7-429E-80AE-B115D7B374E3">
                 <File Id="filBC9868F214E54FE5030066203478B58B" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.System.Power.Projection.dll" />
             </Component>
-            <Component Id="cmp317E2A7342DA4CA080CB2B73EE07FCFE" Guid="B2A7B89D-BC79-4DB1-A0C2-3F0961FA12DA">
+            <Component Id="cmp317E2A7342DA4CA080CB2B73EE07FCFE" Guid="C2B21E37-00A4-4C82-AF75-796B5446F71F">
                 <File Id="fil0189B600527C391BB5CE16844822306C" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.System.Projection.dll" />
             </Component>
-            <Component Id="cmp45423C4C62D3C8FC96EFD3D6A8BDF2C0" Guid="5FB9561F-B438-428D-A0C0-27B15B128393">
+            <Component Id="cmp45423C4C62D3C8FC96EFD3D6A8BDF2C0" Guid="93752E77-C285-479A-80A2-25DDC8C5D950">
                 <File Id="fil3A01C1BD23C7750B99BFC92148485D70" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.Windows.Widgets.Projection.dll" />
             </Component>
-            <Component Id="cmp65E35E1ECCB6C88CBA6C753F9B6EAD2C" Guid="7A4AFDCA-4FA8-44CE-9905-423236822E29">
+            <Component Id="cmp65E35E1ECCB6C88CBA6C753F9B6EAD2C" Guid="0DF84A52-F937-4EDB-A020-9BBDEB8E0A21">
                 <File Id="fil92B6A60392E325AF8AC5F2DDAD1E1947" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" />
             </Component>
-            <Component Id="cmp701FDBE630B5C6570F2B1304CC7E3E38" Guid="93D251EE-31D8-4194-B1DD-E79911AFFC1E">
+            <Component Id="cmp701FDBE630B5C6570F2B1304CC7E3E38" Guid="8DADA7C4-2B3D-474B-B784-BAF96D6020FD">
                 <File Id="filCFB36CCA71DD72B813AFE770280F0A2E" KeyPath="yes" Source="$(var.SourceDir)\Microsoft.WinUI.dll" />
             </Component>
-            <Component Id="cmp4C9248300044C3C9FCFE395B8109FFDC" Guid="75EF36F5-D910-4518-9EC0-F608D771245B">
+            <Component Id="cmp4C9248300044C3C9FCFE395B8109FFDC" Guid="0C0AC208-DEAB-49CC-A5B0-4B8B11105705">
                 <File Id="filC3E5331EC42A9CA8C40A511599A8A180" KeyPath="yes" Source="$(var.SourceDir)\SberBoomRemote.deps.json" />
             </Component>
-            <Component Id="cmp944A0ABE683195DB5631A42D62A39E4F" Guid="DB3ADB30-A824-4627-A2BC-9E64A638D49A">
+            <Component Id="cmp944A0ABE683195DB5631A42D62A39E4F" Guid="655A81C7-0230-4150-B67A-5A6BBA58E818">
                 <File Id="filDBFF1E9CFB24476ADE79A4499228CBC6" KeyPath="yes" Source="$(var.SourceDir)\SberBoomRemote.dll" />
             </Component>
-            <Component Id="cmp76B04432CC70252A0B5740597BAE92DD" Guid="D755A4D1-52AD-47D1-B3DE-E1EAF49F1D8E">
+            <Component Id="cmp76B04432CC70252A0B5740597BAE92DD" Guid="7F3A5533-33C0-4492-9401-C955C79E4515">
                 <File Id="filE45DA8F3E51BA9643D5F95E1E1388EF7" KeyPath="yes" Source="$(var.SourceDir)\SberBoomRemote.exe" />
             </Component>
-            <Component Id="cmpCB027F83CDD08071262A67ED3F316E7F" Guid="40807940-C79F-4559-8A75-2BEDFE28D497">
+            <Component Id="cmpCB027F83CDD08071262A67ED3F316E7F" Guid="A902A3FB-6229-4F53-8535-44168F17D0BE">
                 <File Id="fil81BD25E8311FA6580016A84E813DC717" KeyPath="yes" Source="$(var.SourceDir)\SberBoomRemote.pdb" />
             </Component>
-            <Component Id="cmp2DE518C877E52180F8840242CDC0E53B" Guid="AFD4DD61-5217-460F-90BF-DC4494F39D8C">
+            <Component Id="cmp2DE518C877E52180F8840242CDC0E53B" Guid="0E97355F-8883-423B-B94A-249E87034B74">
                 <File Id="filE585324C1F5D5E1E9F9279A923EFA9D0" KeyPath="yes" Source="$(var.SourceDir)\SberBoomRemote.runtimeconfig.json" />
             </Component>
-            <Component Id="cmp33C30AAD37872CE4355CA33B0DDA2127" Guid="6035A38C-0FC2-4B68-AD8C-F725D296F5C0">
+            <Component Id="cmp33C30AAD37872CE4355CA33B0DDA2127" Guid="F11BEB11-D129-4E71-AF18-5FDED03B2C59">
                 <File Id="filEBB43C021EAE67A8D0F42ED495F441FF" KeyPath="yes" Source="$(var.SourceDir)\WinRT.Runtime.dll" />
             </Component>
             <Directory Id="dir58E8247E2885C01898CAD009F9EFD8BA" Name="runtimes">
                 <Directory Id="dirFF6AADC4B618984E1542CDA5FCBD7BB1" Name="win-arm64">
                     <Directory Id="dir65EC979D52EB501E3A656AA03EE4F2F5" Name="native">
-                        <Component Id="cmp3F26903E25BE80B489C2F2311A8C977D" Guid="D9093D21-3BC6-41B2-806F-D2101F57EDAD">
+                        <Component Id="cmp3F26903E25BE80B489C2F2311A8C977D" Guid="44CFBA56-3CD5-4276-BC58-7CADE2A2BE31">
                             <File Id="fil057BEF421B47D2F79CBF90DA323E094C" KeyPath="yes" Source="$(var.SourceDir)\runtimes\win-arm64\native\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" />
                         </Component>
-                        <Component Id="cmpC522365435B07512C6A2989A0B1A53ED" Guid="E8A49422-DEDC-49C7-AB67-536939D5EA0D">
+                        <Component Id="cmpC522365435B07512C6A2989A0B1A53ED" Guid="F7659EDC-565B-40D7-8921-FF094D207F80">
                             <File Id="filC9060D55A81238ACF32CC9C400C2C70E" KeyPath="yes" Source="$(var.SourceDir)\runtimes\win-arm64\native\Microsoft.WindowsAppRuntime.Bootstrap.dll" />
                         </Component>
-                        <Component Id="cmpAA1177B16890BF04C945489DAB0B96FC" Guid="35EB3B5E-5563-4C81-9A71-3D76F06F06FC">
+                        <Component Id="cmpAA1177B16890BF04C945489DAB0B96FC" Guid="C82BE744-E2A7-4339-B141-9B5A04805617">
                             <File Id="fil368395F62C1D2FD73C45BA75D2A32F1D" KeyPath="yes" Source="$(var.SourceDir)\runtimes\win-arm64\native\WebView2Loader.dll" />
                         </Component>
                     </Directory>
                 </Directory>
                 <Directory Id="dirDFD4A9D98BC8649B761379BDA31639FA" Name="win-arm64ec">
                     <Directory Id="dir8A3D76845CB22938ABAAC31A2D294B78" Name="native">
-                        <Component Id="cmp177B51CD48961BC9ABA257DB0A9874D6" Guid="9C409283-ED96-4CF5-B119-2EB1FFE386E4">
+                        <Component Id="cmp177B51CD48961BC9ABA257DB0A9874D6" Guid="62A43DF3-0AED-464E-A9D5-BD1CC525240F">
                             <File Id="fil778A1D0CB09C2A26FFC582C6289F701D" KeyPath="yes" Source="$(var.SourceDir)\runtimes\win-arm64ec\native\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" />
                         </Component>
-                        <Component Id="cmp0EB2E7D34BE49534299511467A515FB6" Guid="97DA79D1-FEBD-42CE-B467-82022653936D">
+                        <Component Id="cmp0EB2E7D34BE49534299511467A515FB6" Guid="F640FD14-6848-4BD8-8D72-D573D6721FC9">
                             <File Id="fil081E1A7B8027616E2FAC01B305F89BBC" KeyPath="yes" Source="$(var.SourceDir)\runtimes\win-arm64ec\native\Microsoft.WindowsAppRuntime.Bootstrap.dll" />
                         </Component>
                     </Directory>
                 </Directory>
                 <Directory Id="dirB9C75524282911E40C3C964A8836A714" Name="win-x64">
                     <Directory Id="dir1F9DF9DD2FB29AE2942604FAC206D5C4" Name="native">
-                        <Component Id="cmp3B1200EA8AA83C49304754D1DE602D10" Guid="F3D35D4B-52F3-4B8E-8FC6-11F16C02646B">
+                        <Component Id="cmp3B1200EA8AA83C49304754D1DE602D10" Guid="E70324F2-7014-4250-AEA9-A7A505F9BF54">
                             <File Id="fil79D006EFB51FCF62FEF8FBD4FFFDBF63" KeyPath="yes" Source="$(var.SourceDir)\runtimes\win-x64\native\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" />
                         </Component>
-                        <Component Id="cmp26C04945FC545F36C7E23A3D99380983" Guid="80377C61-EC22-4F07-8934-D431B9A6F072">
+                        <Component Id="cmp26C04945FC545F36C7E23A3D99380983" Guid="F6C5C68D-1CE2-4C44-A7F4-6034AC5F0D1D">
                             <File Id="fil734E376135689943CB560FCBA46EA618" KeyPath="yes" Source="$(var.SourceDir)\runtimes\win-x64\native\Microsoft.WindowsAppRuntime.Bootstrap.dll" />
                         </Component>
-                        <Component Id="cmpB9D685AE58FEB3A95799FCF678486AA2" Guid="C2A0198B-07BA-4F42-A8E4-CBA4D7F650BB">
+                        <Component Id="cmpB9D685AE58FEB3A95799FCF678486AA2" Guid="9DBFAA58-B696-4BF8-9230-52504A8A7598">
                             <File Id="filDDB8C2AF8533464741631FC635DF1F70" KeyPath="yes" Source="$(var.SourceDir)\runtimes\win-x64\native\WebView2Loader.dll" />
                         </Component>
                     </Directory>
                 </Directory>
                 <Directory Id="dir92F336DAA82E5A629052407A3F87EF27" Name="win-x86">
                     <Directory Id="dir2B43AAE918D399CEF13EC6CBA2D3D5EA" Name="native">
-                        <Component Id="cmp0F06A48C0D5DA12F72BAFE6814547B11" Guid="F853C658-66A1-461E-9765-BC323D7B4636">
+                        <Component Id="cmp0F06A48C0D5DA12F72BAFE6814547B11" Guid="D6466238-3B0F-4F15-B4BA-4237AB4B9382">
                             <File Id="fil97934BF418DA04C53039267F794B7F53" KeyPath="yes" Source="$(var.SourceDir)\runtimes\win-x86\native\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" />
                         </Component>
-                        <Component Id="cmp2CFCCF682C33B43D663C7197665B1CCF" Guid="CEA4644E-A9A9-497A-A100-066676A91DEC">
+                        <Component Id="cmp2CFCCF682C33B43D663C7197665B1CCF" Guid="553E6DB4-DC86-4921-8B3C-A706C2160B1B">
                             <File Id="fil08BA73F9E8343E6A9B2268224BCEAE96" KeyPath="yes" Source="$(var.SourceDir)\runtimes\win-x86\native\Microsoft.WindowsAppRuntime.Bootstrap.dll" />
                         </Component>
-                        <Component Id="cmp4F7DF7219262D6FC5265D99235D5A68A" Guid="46B84EF0-DCFB-4657-A8A7-56FE5A2E6DB5">
+                        <Component Id="cmp4F7DF7219262D6FC5265D99235D5A68A" Guid="3E5DD4B6-2368-4EF8-B8D2-310A5A682537">
                             <File Id="filCB5B16D1774F1A284B9490C5CB978E18" KeyPath="yes" Source="$(var.SourceDir)\runtimes\win-x86\native\WebView2Loader.dll" />
                         </Component>
                     </Directory>

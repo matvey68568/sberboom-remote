@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
+
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bluetooth
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
@@ -131,7 +131,6 @@ fun PlayerScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 18.dp),
         ) {
             Spacer(Modifier.height(10.dp))
@@ -280,7 +279,8 @@ fun PlayerScreen(
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f)
+                    .weight(1f, fill = true)
+                    .padding(vertical = 6.dp)
                     .pressScale(coverInteraction, pressed = 0.97f)
                     .clip(RoundedCornerShape(36.dp))
                     .clickable(interactionSource = coverInteraction, indication = null) {
@@ -480,7 +480,7 @@ fun PlayerScreen(
                 Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 ExpressiveChip(
@@ -563,7 +563,6 @@ fun PlayerScreen(
                 )
             }
 
-            Spacer(Modifier.height(24.dp))
         }
 
         if (showHistory) {
