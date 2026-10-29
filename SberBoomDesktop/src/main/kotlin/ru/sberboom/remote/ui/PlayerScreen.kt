@@ -184,11 +184,13 @@ fun PlayerScreen(
                         )
                     }
                 }
+                Spacer(Modifier.width(8.dp))
                 ExpressiveChip(
                     icon = Icons.Rounded.Search,
                     onClick = onOpenSearch,
                     contentDescription = "Поиск в Звуке",
                 )
+                Spacer(Modifier.width(8.dp))
                 Box {
                     ExpressiveChip(
                         icon = Icons.Rounded.MoreVert,
