@@ -328,17 +328,19 @@ public sealed partial class MainWindow
                 var connect = new Button { Content = device.Connected ? "Отключить" : "Подключить" };
                 connect.Click += async (_, _) =>
                 {
+                    status.Text = device.Connected ? "Отключаю…" : "Подключаю…";
                     await SendBtCommandAsync(device.Mac,
                         device.Connected ? BtCommand.Disconnect : BtCommand.Connect);
-                    dialog.Hide();
+                    await ReloadAsync();
                 };
                 Grid.SetColumn(connect, 2);
 
                 var forget = new Button { Content = "Забыть" };
                 forget.Click += async (_, _) =>
                 {
+                    status.Text = "Убираю устройство…";
                     await SendBtCommandAsync(device.Mac, BtCommand.Remove);
-                    dialog.Hide();
+                    await ReloadAsync();
                 };
                 Grid.SetColumn(forget, 3);
 
@@ -363,28 +365,36 @@ public sealed partial class MainWindow
             list.Children.Add(pairing);
         }
 
-        _ = Task.Run(async () =>
+        async Task ReloadAsync()
         {
+            var client = _client;
+            if (client == null)
+            {
+                status.Text = "Нет соединения с колонкой";
+                return;
+            }
             try
             {
-                var raw = await _client!.RequestRawAsync(Requests.GetPairedBt);
+                var raw = await client.RequestRawAsync(Requests.GetPairedBt);
                 var devices = Parsers.ParseBtDevices(raw);
-                DispatcherQueue.TryEnqueue(() => Render(devices));
+                Render(devices);
             }
             catch (Exception ex)
             {
-                DispatcherQueue.TryEnqueue(() => status.Text = "Не удалось прочитать список: " + ex.Message);
+                status.Text = "Не удалось прочитать список: " + ex.Message;
             }
-        });
+        }
 
+        dialog.Opened += (_, _) => _ = ReloadAsync();
         await dialog.ShowAsync();
     }
 
+    /// <summary>Коды op=20 из интеграции sboom_ha: 0 — подключить, 1 — отключить, 2 — забыть.</summary>
     private enum BtCommand
     {
-        Connect = 1,
-        Disconnect = 2,
-        Remove = 3,
+        Connect = 0,
+        Disconnect = 1,
+        Remove = 2,
     }
 
     private async Task SendBtCommandAsync(string mac, BtCommand command)
