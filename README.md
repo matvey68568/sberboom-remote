@@ -93,10 +93,9 @@ bash installer/build-msi.sh     # MSI-установщик (WiX 3.14 из tools/
 Подробности сборки (в том числе работа без Visual Studio) — в
 `SberBoomWinUI3/README.md`.
 
-## Ветка `material-3-expressive`
+## Оформление интерфейса
 
-Редизайн интерфейса в стилистике **Material 3 Expressive**. Живёт в отдельной ветке,
-`main` остаётся на прежнем оформлении — сравнить можно, переключив ветку.
+Android-версия оформлена в стилистике **Material 3 Expressive**.
 
 Что изменилось в оформлении:
 
@@ -111,10 +110,10 @@ bash installer/build-msi.sh     # MSI-установщик (WiX 3.14 из tools/
   `AnimatedContent` со scale+fade.
 - **Волнистый прогресс** — `WavyProgress`: по прошедшей части трека бежит синусоида,
   амплитуда дышит, на паузе волна схлопывается в линию; тап и перетаскивание — перемотка.
-  Сделано на Canvas, потому что библиотечный `LinearWavyProgressIndicator` есть не на всех
-  платформах, а этот код общий для Android и Windows.
+  Сделано на Canvas: библиотечный `LinearWavyProgressIndicator` есть не в каждой
+  версии Material3.
 - **Чипы-переключатели** — `ExpressiveChip`: shuffle, повтор, лайк, текст, скорость,
-  пульт, Bluetooth; выбранное состояние заливается `primaryContainer`.
+  Bluetooth; выбранное состояние заливается `primaryContainer`.
 - **Транспорт** — плавающая пилюля `surfaceContainerHigh` с крупной кнопкой-сквориклом.
 
 Собрать Android-версию:
@@ -123,8 +122,8 @@ bash installer/build-msi.sh     # MSI-установщик (WiX 3.14 из tools/
 cd SberBoomRemote && ./gradlew :app:testDebugUnitTest :app:assembleDebug
 ```
 
-`Expressive.kt` (общий для платформ) содержит `pressScale`, `ExpressiveChip`,
-`WavyProgress`, `ExpressiveSection`; пружины и кривые — в `Theme.kt` (`object Motion`).
+`Expressive.kt` содержит `pressScale`, `ExpressiveChip`, `WavyProgress`,
+`ExpressiveSection`; пружины и кривые — в `Theme.kt` (`object Motion`).
 
 ## Протокол
 
