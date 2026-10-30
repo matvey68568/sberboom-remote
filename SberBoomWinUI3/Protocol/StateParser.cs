@@ -132,6 +132,9 @@ public static class StateParser
         if (!root.TryGetProperty("background_apps", out var apps) || apps.ValueKind != JsonValueKind.Array)
             return (null, null);
 
+        JsonElement? freshestPlayer = null, freshestInfo = null;
+        var freshestAt = -1L;
+
         foreach (var app in apps.EnumerateArray())
         {
             if (!app.TryGetProperty("state", out var state) || state.ValueKind != JsonValueKind.Object) continue;
@@ -147,6 +150,15 @@ public static class StateParser
                     playingWithInfo = player;
                     playingInfo = info;
                 }
+                // Свежесть состояния: при паузе у обоих приложений играющим считается
+                // то, чьё состояние обновилось последним (иначе показывался трек Звука).
+                var at = GetLong(player, "stateChangedTimestamp") ?? 0;
+                if (hasTitle && at > freshestAt)
+                {
+                    freshestAt = at;
+                    freshestPlayer = player;
+                    freshestInfo = info;
+                }
                 if (GetString(info, "trackId") is { Length: > 0 })
                 {
                     withTrack ??= player;
@@ -158,6 +170,7 @@ public static class StateParser
         }
 
         if (playingWithInfo != null) return (playingWithInfo, playingInfo);
+        if (freshestPlayer != null) return (freshestPlayer, freshestInfo);
         return withTrack != null ? (withTrack, withTrackInfo) : (firstPlayer, firstInfo);
     }
 

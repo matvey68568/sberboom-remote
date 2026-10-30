@@ -150,6 +150,22 @@ class ProtocolTest {
     }
 
     @Test
+    fun parsesRealFrameFromSpeaker() {
+        // Настоящий кадр op=12 от колонки (hex в ресурсах): Звук на паузе с треком
+        // «ночь», Bluetooth-источник — «Это был дождь», playing=false у обоих.
+        // Ожидание: выбирается источник, чьё состояние обновилось последним.
+        val hex = javaClass.classLoader!!.getResourceAsStream("state-bt.hex")!!
+            .readBytes().toString(Charsets.UTF_8).trim()
+        val raw = hex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+
+        val track = Payloads.trackFromRawState(raw)
+        assertNotNull(track)
+        assertEquals(Source.BLUETOOTH, track!!.source)
+        assertEquals("Это был дождь", track.title)
+        assertEquals("Noize MC", track.artistLine)
+    }
+
+    @Test
     fun parsesRealBluetoothState() {
         // Живой ответ op=12 при воспроизведении с телефона по Bluetooth:
         // первым идёт приложение Звука (не играет), у Bluetooth-источника нет trackId,

@@ -522,10 +522,16 @@ object Payloads {
     /** Трек из состояния (радио/Bluetooth: у них нет get_metadata/trackId). */
     fun trackFromState(data: JSONObject): Track? {
         val apps = data.optJSONArray("background_apps") ?: return null
-        var candidatePlayer: JSONObject? = null
-        var candidateInfo: JSONObject? = null
-        var candidateAppName: String? = null
 
+        data class Candidate(
+            val appName: String,
+            val player: JSONObject,
+            val info: JSONObject,
+            val playing: Boolean,
+            val updatedAt: Long,
+        )
+
+        val candidates = ArrayList<Candidate>()
         for (i in 0 until apps.length()) {
             val app = apps.optJSONObject(i) ?: continue
             val name = app.optJSONObject("app_info")?.let { str(it, "systemName") } ?: continue
@@ -533,22 +539,27 @@ object Payloads {
             val player = app.optJSONObject("state")?.optJSONObject("player") ?: continue
             val info = player.optJSONObject("info") ?: continue
             if (str(info, "title") == null && str(info, "trackId") == null && str(info, "stationName") == null) continue
-            if (player.optBoolean("playing")) {
-                candidateAppName = name
-                candidatePlayer = player
-                candidateInfo = info
-                break
-            }
-            if (candidatePlayer == null) {
-                candidateAppName = name
-                candidatePlayer = player
-                candidateInfo = info
-            }
+            candidates.add(
+                Candidate(
+                    appName = name,
+                    player = player,
+                    info = info,
+                    playing = player.optBoolean("playing"),
+                    updatedAt = player.optLong("stateChangedTimestamp", 0L),
+                ),
+            )
         }
 
-        val player = candidatePlayer ?: return null
-        val info = candidateInfo ?: return null
-        val appName = candidateAppName
+        // Выбор источника: сначала явно играющее приложение, иначе — то, чьё состояние
+        // обновлялось последним. Без второго правила после перехода на Bluetooth
+        // (оба приложения «на паузе») плеер показывал старый трек Звука.
+        val chosen = candidates.firstOrNull { it.playing }
+            ?: candidates.maxByOrNull { it.updatedAt }
+            ?: return null
+
+        val player = chosen.player
+        val info = chosen.info
+        val appName = chosen.appName
 
         val station = str(info, "stationName")
         val provider = str(info, "provider")

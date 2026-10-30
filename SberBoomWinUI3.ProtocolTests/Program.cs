@@ -75,6 +75,16 @@ internal static class Program
                 Console.WriteLine($"       cover: {t.CoverUrl}");
             }
 
+            if (args.Length >= 3 && args[2] == "rawstate")
+            {
+                var bytes = await client.RequestRawAsync(Requests.GetState);
+                var path = Path.Combine(Path.GetTempPath(), "raw-state.bin");
+                await File.WriteAllBytesAsync(path, bytes);
+                Console.WriteLine($"raw state: {bytes.Length} байт → {path}");
+                var json = await client.GetStateJsonAsync();
+                Console.WriteLine((json?.Length ?? 0) + " символов JSON");
+            }
+
             if (args.Length >= 3 && args[2] == "dump")
             {
                 var json = await client.GetStateJsonAsync();
