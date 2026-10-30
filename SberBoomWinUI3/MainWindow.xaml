@@ -75,9 +75,19 @@
         <!-- ═══════════ плеер ═══════════ -->
         <ScrollViewer x:Name="PlayerView" Grid.Row="1" Visibility="Collapsed"
                       VerticalScrollBarVisibility="Auto">
-            <StackPanel Padding="24,0,24,24" Spacing="14" MaxWidth="440">
+            <Grid Padding="24,0,24,24" RowSpacing="14" MaxWidth="440">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <Grid ColumnSpacing="8">
+                <Grid Grid.Row="0" ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
@@ -134,10 +144,11 @@
                 </Grid>
 
                 <!-- обложка -->
-                <Border CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                <Border Grid.Row="1" CornerRadius="8" MinHeight="140" VerticalAlignment="Stretch"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
                     <Grid>
-                        <Image x:Name="CoverImage" Stretch="UniformToFill" Height="288" />
+                        <Image x:Name="CoverImage" Stretch="UniformToFill" />
                         <FontIcon x:Name="CoverPlaceholder" Glyph="&#xE8D6;" FontSize="64" Opacity="0.4"
                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <Border x:Name="SourceBadge" VerticalAlignment="Bottom" HorizontalAlignment="Left"
@@ -154,7 +165,7 @@
                 </Border>
 
                 <!-- трек -->
-                <StackPanel Spacing="2">
+                <StackPanel Grid.Row="2" Spacing="2">
                     <TextBlock x:Name="TrackTitle" Text="Ничего не играет"
                                Style="{StaticResource SubtitleTextBlockStyle}"
                                TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
@@ -171,7 +182,7 @@
                 </StackPanel>
 
                 <!-- прогресс -->
-                <StackPanel>
+                <StackPanel Grid.Row="3">
                     <Slider x:Name="ProgressSlider" Minimum="0" Maximum="100" StepFrequency="1"
                             ValueChanged="ProgressSlider_ValueChanged" />
                     <Grid>
@@ -185,7 +196,7 @@
                 </StackPanel>
 
                 <!-- транспорт -->
-                <Grid HorizontalAlignment="Center" ColumnSpacing="8">
+                <Grid Grid.Row="4" HorizontalAlignment="Center" ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
@@ -218,7 +229,7 @@
                 </Grid>
 
                 <!-- вторичные действия -->
-                <StackPanel Orientation="Horizontal" Spacing="2" HorizontalAlignment="Center">
+                <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="2" HorizontalAlignment="Center">
                     <Button x:Name="LikeButton" Style="{StaticResource TransportButton}"
                             Click="Like_Click" ToolTipService.ToolTip="Нравится">
                         <FontIcon x:Name="LikeIcon" Glyph="&#xE8E1;" FontSize="16" />
@@ -246,7 +257,7 @@
                 </StackPanel>
 
                 <!-- громкость -->
-                <Grid ColumnSpacing="8">
+                <Grid Grid.Row="6" ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
@@ -264,10 +275,10 @@
                                Width="36" VerticalAlignment="Center" Text="0%" />
                 </Grid>
 
-                <TextBlock x:Name="SleepTimerText" Style="{StaticResource CaptionTextBlockStyle}"
+                <TextBlock x:Name="SleepTimerText" Grid.Row="7" Style="{StaticResource CaptionTextBlockStyle}"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                            Visibility="Collapsed" />
-            </StackPanel>
+            </Grid>
         </ScrollViewer>
 
         <InfoBar x:Name="Notice" Grid.Row="1" IsOpen="False" Severity="Informational"
