@@ -41,3 +41,6 @@ SberBoomWinUI3.ProtocolTests/obj/
 *.wixobj
 *.wixpdb
 SberBoomWinUI3/installer/Files.wxs
+SberBoomWinUI3-1.3*/
+SberBoomWinUI3-1.3*.zip
+SberBoomRemote/SberBoomRemote-*.apk
