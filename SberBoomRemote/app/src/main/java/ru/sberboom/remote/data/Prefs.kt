@@ -141,6 +141,11 @@ class Prefs(context: Context) : Settings {
             else sp.edit().putString("history", value).apply()
         }
 
+    /** Поправка караоке: насколько раньше показывать строку (мс). */
+    override var lyricLeadMs: Int
+        get() = sp.getInt("lyric_lead_ms", 350)
+        set(value) = sp.edit().putInt("lyric_lead_ms", value.coerceIn(-2000, 2000)).apply()
+
     /** Громкая караоке-заливка активной строки. */
     override var karaokeFill: Boolean
         get() = sp.getBoolean("karaoke_fill", true)

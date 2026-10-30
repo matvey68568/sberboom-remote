@@ -74,6 +74,31 @@ internal static class Program
                 Console.WriteLine($"       cover: {t.CoverUrl}");
             }
 
+            if (args.Length >= 5 && args[2] == "bt")
+            {
+                var mac = args[3];
+                var cmd = int.Parse(args[4]);
+                var before = Parsers.ParseBtDevices(await client.RequestRawAsync(Requests.GetPairedBt));
+                Console.WriteLine($"до: {string.Join(", ", before.Select(d => $"{d.Name}={(d.Connected ? "on" : "off")}"))}");
+                var frame = Tlv.Bytes(Proto.OpBtDeviceCommand, Tlv.Concat(Tlv.Str(1, mac), Tlv.Int(2, cmd)));
+                Console.WriteLine("кадр: " + Convert.ToHexString(frame).ToLowerInvariant());
+                try
+                {
+                    var reply = await client.RequestRawAsync(frame, 4000);
+                    Console.WriteLine("ответ: " + Convert.ToHexString(reply).ToLowerInvariant());
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("ответа нет: " + ex.GetType().Name + " " + ex.Message);
+                }
+                for (var i = 0; i < 3; i++)
+                {
+                    await Task.Delay(1500);
+                    var after = Parsers.ParseBtDevices(await client.RequestRawAsync(Requests.GetPairedBt));
+                    Console.WriteLine($"через {(i + 1) * 1.5:0.0} с: {string.Join(", ", after.Select(d => $"{d.Name}={(d.Connected ? "on" : "off")}"))}");
+                }
+            }
+
             var btRaw = await client.RequestRawAsync(Requests.GetPairedBt);
             var bt = Parsers.ParseBtDevices(btRaw);
             Console.WriteLine($"bluetooth: {bt.Count} устройств");

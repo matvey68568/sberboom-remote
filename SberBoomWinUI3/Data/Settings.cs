@@ -51,6 +51,12 @@ public sealed class Settings
     public Dictionary<string, string> Tokens { get; set; } = new();
     public List<HistoryEntry> History { get; set; } = new();
     public long? SleepUntilMs { get; set; }
+
+    /// <summary>
+    /// Поправка караоке в миллисекундах: насколько раньше показывать строку.
+    /// Зависит от версии трека на колонке и от задержки сети — задаётся вручную.
+    /// </summary>
+    public int LyricLeadMs { get; set; } = 350;
     public List<KnownSpeaker> Speakers { get; set; } = new();
 
     [JsonIgnore]

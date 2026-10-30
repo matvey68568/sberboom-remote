@@ -198,6 +198,8 @@ class ScreenRenderTest {
                     karaokeFill = true,
                     activeProgress = 0.45f,
                     onToggleFill = {},
+                    leadMs = 350,
+                    onNudgeLead = {},
                     onReload = {},
                     onDismiss = {},
                 )

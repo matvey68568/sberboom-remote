@@ -92,12 +92,12 @@ public static class LyricsApi
     }
 
     /// <summary>Индекс активной строки по позиции трека (-1, если ещё не началось).</summary>
-    public static int ActiveIndex(List<LrcLine> lines, float positionSec)
+    public static int ActiveIndex(List<LrcLine> lines, float positionSec, float leadSec = LeadSec)
     {
         var index = -1;
         for (var i = 0; i < lines.Count; i++)
         {
-            if (lines[i].TimeSec <= positionSec + LeadSec) index = i;
+            if (lines[i].TimeSec <= positionSec + leadSec) index = i;
             else break;
         }
         return index;

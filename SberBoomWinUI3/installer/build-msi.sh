@@ -39,13 +39,18 @@ echo "== heat: список файлов =="
 "$WIX_DIR/heat.exe" dir "$DIST" -cg AppFiles -dr INSTALLFOLDER -gg -g1 -sfrag -srd \
   -sreg -scom -var var.SourceDir -out "$(winpath "$(pwd)/installer/Files.wxs")"
 
-echo "== candle =="
-"$WIX_DIR/candle.exe" -nologo -arch x64 -dSourceDir="$DIST" \
+VERSION=$(grep -oE '<Version>[0-9]+\.[0-9]+\.[0-9]+' SberBoom.WinUI.csproj | head -1 | sed 's/<Version>//')
+# ProductCode выводим из версии: при смене версии он новый, MajorUpgrade срабатывает
+PRODUCT_CODE=$(python -c "
+import uuid
+print('{' + str(uuid.uuid5(uuid.NAMESPACE_DNS, 'sberboom-remote-' + '$VERSION')).upper() + '}')")
+
+echo "== candle (версия $VERSION, ProductCode $PRODUCT_CODE) =="
+"$WIX_DIR/candle.exe" -nologo -arch x64 -dSourceDir="$DIST" -dProductVersion="$VERSION.0" -dProductCodeId="$PRODUCT_CODE" \
   -out "$(winpath "$(pwd)/installer/installer.wixobj")" "$(winpath "$(pwd)/installer/installer.wxs")"
 "$WIX_DIR/candle.exe" -nologo -arch x64 -dSourceDir="$DIST" \
   -out "$(winpath "$(pwd)/installer/Files.wixobj")" "$(winpath "$(pwd)/installer/Files.wxs")"
 
-VERSION=$(grep -oE '<Version>[0-9]+\.[0-9]+\.[0-9]+' SberBoom.WinUI.csproj | head -1 | sed 's/<Version>//')
 OUT="../SberBoomWinUI3-${VERSION}-x64.msi"
 
 echo "== light =="

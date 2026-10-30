@@ -95,7 +95,7 @@ public sealed partial class MainWindow
         };
         results.IsItemClickEnabled = true;
 
-        await dialog.ShowAsync();
+        await ShowDialogGuardedAsync(dialog);
     }
 
     // ─────────────────────────── очередь ───────────────────────────
@@ -182,7 +182,7 @@ public sealed partial class MainWindow
             }
         });
 
-        await dialog.ShowAsync();
+        await ShowDialogGuardedAsync(dialog);
     }
 
     // ─────────────────────────── текст песни ───────────────────────────
@@ -214,6 +214,30 @@ public sealed partial class MainWindow
         panel.Children.Add(status);
         panel.Children.Add(list);
 
+        // Поправка: текст на колонке и тайминги из базы могут расходиться на доли секунды,
+        // угадать это нельзя — даём подстроить вручную и запоминаем.
+        var leadLabel = new TextBlock
+        {
+            Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
+            Foreground = MutedBrush(),
+            Text = LyricLeadLabel(),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        var earlier = new Button { Content = "Текст раньше" };
+        var later = new Button { Content = "Текст позже" };
+        earlier.Click += (_, _) => { NudgeLyricLead(-250); leadLabel.Text = LyricLeadLabel(); };
+        later.Click += (_, _) => { NudgeLyricLead(250); leadLabel.Text = LyricLeadLabel(); };
+        var leadRow = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 8,
+            Margin = new Thickness(0, 4, 0, 0),
+        };
+        leadRow.Children.Add(earlier);
+        leadRow.Children.Add(later);
+        leadRow.Children.Add(leadLabel);
+        panel.Children.Add(leadRow);
+
         foreach (var line in _lyrics)
         {
             list.Items.Add(new TextBlock
@@ -237,7 +261,7 @@ public sealed partial class MainWindow
         timer.Tick += (_, _) =>
         {
             if (_state?.Track == null || _lyrics.Count == 0) return;
-            var index = LyricsApi.ActiveIndex(_lyrics, (float)_state.Track.LivePositionSec());
+            var index = LyricsApi.ActiveIndex(_lyrics, (float)_state.Track.LivePositionSec(), LyricLeadSec);
             if (index < 0 || index >= list.Items.Count) return;
 
             for (var i = 0; i < list.Items.Count; i++)
@@ -254,7 +278,7 @@ public sealed partial class MainWindow
         dialog.Opened += (_, _) => timer.Start();
         dialog.Closed += (_, _) => timer.Stop();
 
-        await dialog.ShowAsync();
+        await ShowDialogGuardedAsync(dialog);
     }
 
     // ─────────────────────────── Bluetooth ───────────────────────────
@@ -288,12 +312,24 @@ public sealed partial class MainWindow
             CloseButtonText = "Закрыть",
         };
 
+        string signature = "";
+        var lastDevices = new List<BtDevice>();
+        var busy = false;
+
+        static string SignatureOf(List<BtDevice> devices) =>
+            string.Join("|", devices.Select(d => d.Mac + ":" + d.Connected));
+
         void Render(List<BtDevice> devices)
         {
+            signature = SignatureOf(devices);
             list.Children.Clear();
             if (devices.Count == 0)
             {
                 status.Text = "Спаренных устройств нет. Включите режим сопряжения и подключите телефон.";
+            }
+            else if (signature == SignatureOf(devices) && busy)
+            {
+                // список не изменился, а команда ещё выполняется — не затираем её статус
             }
             else
             {
@@ -328,10 +364,18 @@ public sealed partial class MainWindow
                 var connect = new Button { Content = device.Connected ? "Отключить" : "Подключить" };
                 connect.Click += async (_, _) =>
                 {
-                    status.Text = device.Connected ? "Отключаю…" : "Подключаю…";
+                    var wasConnected = device.Connected;
+                    busy = true;
+                    status.Text = wasConnected ? "Отключаю…" : "Подключаю…";
                     await SendBtCommandAsync(device.Mac,
-                        device.Connected ? BtCommand.Disconnect : BtCommand.Connect);
-                    await ReloadAsync();
+                        wasConnected ? BtCommand.Disconnect : BtCommand.Connect);
+                    // ждём, пока колонка действительно переключит устройство (1–4 с),
+                    // иначе список показывал прежнее состояние
+                    var changed = await WaitForChangeAsync(device.Mac, !wasConnected);
+                    busy = false;
+                    status.Text = changed
+                        ? (wasConnected ? "Отключено" : "Подключено")
+                        : "Колонка не переключилась: проверьте, что Bluetooth включён на устройстве";
                 };
                 Grid.SetColumn(connect, 2);
 
@@ -340,7 +384,13 @@ public sealed partial class MainWindow
                 {
                     status.Text = "Убираю устройство…";
                     await SendBtCommandAsync(device.Mac, BtCommand.Remove);
-                    await ReloadAsync();
+                    for (var i = 0; i < 5; i++)
+                    {
+                        await Task.Delay(800);
+                        var before = signature;
+                        await ReloadAsync();
+                        if (signature != before) break;
+                    }
                 };
                 Grid.SetColumn(forget, 3);
 
@@ -377,6 +427,7 @@ public sealed partial class MainWindow
             {
                 var raw = await client.RequestRawAsync(Requests.GetPairedBt);
                 var devices = Parsers.ParseBtDevices(raw);
+                lastDevices = devices;
                 Render(devices);
             }
             catch (Exception ex)
@@ -385,8 +436,21 @@ public sealed partial class MainWindow
             }
         }
 
+        /// <summary>Ждёт, пока в списке появится желаемое состояние устройства.</summary>
+        async Task<bool> WaitForChangeAsync(string mac, bool wantConnected)
+        {
+            for (var i = 0; i < 6; i++)
+            {
+                await Task.Delay(700);
+                await ReloadAsync();
+                var device = lastDevices.FirstOrDefault(d => d.Mac.Equals(mac, StringComparison.OrdinalIgnoreCase));
+                if (device != null && device.Connected == wantConnected) return true;
+            }
+            return false;
+        }
+
         dialog.Opened += (_, _) => _ = ReloadAsync();
-        await dialog.ShowAsync();
+        await ShowDialogGuardedAsync(dialog);
     }
 
     /// <summary>Коды op=20 из интеграции sboom_ha: 0 — подключить, 1 — отключить, 2 — забыть.</summary>
@@ -399,7 +463,12 @@ public sealed partial class MainWindow
 
     private async Task SendBtCommandAsync(string mac, BtCommand command)
     {
-        if (_client == null) return;
+        if (_client == null)
+        {
+            Program.Log("bt: нет соединения");
+            return;
+        }
+        Program.Log($"bt: {command} {mac}");
         var request = Tlv.Bytes(Proto.OpBtDeviceCommand,
             Tlv.Concat(Tlv.Str(1, mac), Tlv.Int(2, (int)command)));
         await CommandAsync(request);
@@ -477,7 +546,7 @@ public sealed partial class MainWindow
             dialog.Hide();
         };
 
-        await dialog.ShowAsync();
+        await ShowDialogGuardedAsync(dialog);
     }
 
     // ─────────────────────────── диагностика ───────────────────────────

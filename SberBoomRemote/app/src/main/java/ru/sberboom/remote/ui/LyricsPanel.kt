@@ -20,7 +20,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Lyrics
+import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -65,6 +67,8 @@ fun LyricsPanel(
     karaokeFill: Boolean,
     activeProgress: Float,
     onToggleFill: () -> Unit,
+    leadMs: Int,
+    onNudgeLead: (Int) -> Unit,
     onReload: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -141,6 +145,29 @@ fun LyricsPanel(
                         Icons.Rounded.Lyrics,
                         if (karaokeFill) "Выключить заливку строки" else "Включить заливку строки",
                         tint = if (karaokeFill) SberGreen else Muted,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+                // Подстройка синхронизации: тайминги из базы могут расходиться с версией
+                // трека на колонке, поэтому сдвиг задаётся вручную.
+                IconButton(onClick = { onNudgeLead(-250) }) {
+                    Icon(
+                        Icons.Rounded.Remove,
+                        "Текст позже на 0,25 с",
+                        tint = Muted,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+                Text(
+                    "%.2f".format(java.util.Locale.US, leadMs / 1000f),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Muted,
+                )
+                IconButton(onClick = { onNudgeLead(250) }) {
+                    Icon(
+                        Icons.Rounded.Add,
+                        "Текст раньше на 0,25 с",
+                        tint = Muted,
                         modifier = Modifier.size(20.dp),
                     )
                 }

@@ -49,6 +49,20 @@ public sealed partial class MainWindow : Window
     private float _speed = 1f;
     private string? _lyricsFor;
     private string? _historyTrackId;
+
+    /// <summary>Поправка караоке из настроек (секунды).</summary>
+    private float LyricLeadSec => _settings.LyricLeadMs / 1000f;
+
+    private string LyricLeadLabel() =>
+        "Поправка " + (_settings.LyricLeadMs / 1000.0).ToString("0.00") + " с";
+
+    /// <summary>Сдвиг караоке на ±250 мс (положительное — строка появляется раньше звука).</summary>
+    internal void NudgeLyricLead(int deltaMs)
+    {
+        _settings.LyricLeadMs = Math.Clamp(_settings.LyricLeadMs + deltaMs, -2000, 2000);
+        _settings.Save();
+        UpdateLyricLine();
+    }
     private List<LrcLine> _lyrics = new();
     private bool _sleepFired;
     private bool _dialogOpen;
@@ -461,7 +475,7 @@ public sealed partial class MainWindow : Window
         }
 
         var position = (float)_state.Track.LivePositionSec();
-        var index = LyricsApi.ActiveIndex(_lyrics, position);
+        var index = LyricsApi.ActiveIndex(_lyrics, position, LyricLeadSec);
         if (index < 0)
         {
             TrackLyricLine.Visibility = Visibility.Collapsed;
@@ -617,6 +631,9 @@ public sealed partial class MainWindow : Window
             return;
         }
 
+        if (_dialogOpen) return;
+        _dialogOpen = true;
+
         var dialog = BuildPairingDialog();
         var dialogTask = dialog.ShowAsync();
 
@@ -655,6 +672,7 @@ public sealed partial class MainWindow : Window
         finally
         {
             try { await dialogTask; } catch { /* диалог закрыт */ }
+            _dialogOpen = false;
         }
     }
 

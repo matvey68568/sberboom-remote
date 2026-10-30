@@ -28,6 +28,12 @@ interface Settings {
     var clientName: String
     var karaokeFill: Boolean
 
+    /**
+     * Поправка караоке в миллисекундах: насколько раньше показывать строку.
+     * Зависит от версии трека на колонке — подстраивается вручную.
+     */
+    var lyricLeadMs: Int
+
     /** Стабильный id клиента — колонка запоминает его по токену. */
     val clientId: String
 

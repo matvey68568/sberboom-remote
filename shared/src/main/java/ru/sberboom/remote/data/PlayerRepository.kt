@@ -76,6 +76,9 @@ data class PlayerUiState(
     val similarLoading: Boolean = false,
     val connectedBtName: String? = null,
     val lyrics: List<LyricLine> = emptyList(),
+
+    /** Поправка караоке в секундах (из настроек). */
+    val lyricLeadSec: Float = 0.35f,
     val lyricsPlain: String? = null,
     val lyricsSource: String? = null,
     val lyricsInstrumental: Boolean = false,
@@ -129,6 +132,7 @@ class PlayerRepository(
             deviceModel = prefs.deviceModel,
             deviceFirmware = prefs.deviceFirmware,
             karaokeFill = prefs.karaokeFill,
+            lyricLeadSec = prefs.lyricLeadMs / 1000f,
             lightTheme = prefs.lightTheme,
             history = readHistory(),
         ),
@@ -655,6 +659,12 @@ class PlayerRepository(
      * Команда BT-устройству (op=20): 0 — подключить, 1 — отключить, 2 — забыть.
      * Отдельной команды «выключить Bluetooth-модуль колонки» протокол не имеет.
      */
+    /** Сдвиг караоке: положительное значение — строка появляется раньше звука. */
+    fun setLyricLead(deltaMs: Int) {
+        prefs.lyricLeadMs = (prefs.lyricLeadMs + deltaMs).coerceIn(-2000, 2000)
+        _state.update { it.copy(lyricLeadSec = prefs.lyricLeadMs / 1000f) }
+    }
+
     fun btCommand(device: BtDevice, command: Int) {
         send(Requests.btCommand(device.mac, command))
         notice(

@@ -8,10 +8,10 @@
   поэтому при обновлении сборки его нужно перегенерировать.
 -->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*"
+  <Product Id="$(var.ProductCodeId)"
            Name="SberBoom Remote"
            Language="1049"
-           Version="1.3.1.0"
+           Version="$(var.ProductVersion)"
            Manufacturer="SberBoom Remote"
            UpgradeCode="8F2F0F4E-6A4F-4A1E-9C6B-0D3A5B9C7F21">
 
