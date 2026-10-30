@@ -64,6 +64,8 @@ public sealed partial class MainWindow : Window
         UpdateLyricLine();
     }
     private List<LrcLine> _lyrics = new();
+    private string? _lyricsPlain;
+    private bool _lyricsInstrumental;
     private bool _sleepFired;
     private bool _dialogOpen;
     private double _dpiScale = 1.0;
@@ -72,6 +74,13 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
         Title = "SberBoom Remote";
+        // Версия в заголовке — чтобы было видно, какая сборка установлена.
+        try
+        {
+            var version = typeof(MainWindow).Assembly.GetName().Version;
+            TitleText.Text = $"SberBoom Remote  {version?.Major}.{version?.Minor}.{version?.Build}";
+        }
+        catch { /* не критично */ }
         ResizeWindow(480, 920);
 
         // Fluent: Mica-подложка и собственный заголовок окна.
@@ -507,6 +516,8 @@ public sealed partial class MainWindow : Window
         var lines = await LyricsApi.GetAsync(track.ArtistLine, track.Title, track.Album, track.DurationSec);
         if (key != _lyricsFor) return;
         _lyrics = lines;
+        _lyricsPlain = LyricsApi.LastPlain;
+        _lyricsInstrumental = LyricsApi.LastInstrumental;
         UpdateLyricLine();
     }
 

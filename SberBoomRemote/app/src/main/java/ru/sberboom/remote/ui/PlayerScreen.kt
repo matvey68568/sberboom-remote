@@ -263,6 +263,17 @@ fun PlayerScreen(
                             menuOpen = false
                             repo.disconnect()
                         })
+                        // Версия видна в меню: так сразу понятно, какая сборка установлена.
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    "Версия " + ru.sberboom.remote.BuildConfig.VERSION_NAME,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = Muted,
+                                )
+                            },
+                            onClick = { menuOpen = false },
+                        )
                     }
                 }
             }

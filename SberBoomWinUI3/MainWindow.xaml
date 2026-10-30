@@ -19,7 +19,7 @@
             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                 <FontIcon Glyph="&#xE7F5;" FontSize="14"
                           Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                <TextBlock Text="SberBoom Remote" Style="{StaticResource CaptionTextBlockStyle}"
+                <TextBlock x:Name="TitleText" Text="SberBoom Remote" Style="{StaticResource CaptionTextBlockStyle}"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                            VerticalAlignment="Center" />
             </StackPanel>

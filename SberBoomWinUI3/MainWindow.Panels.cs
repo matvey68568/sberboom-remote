@@ -204,11 +204,18 @@ public sealed partial class MainWindow
         }
 
         var panel = new StackPanel { Spacing = 8 };
+        var hasSynced = _lyrics.Count > 0;
         var status = new TextBlock
         {
             Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
             Foreground = MutedBrush(),
-            Text = _lyrics.Count == 0 ? "Текст не найден" : $"{track.Title} — {track.ArtistLine}",
+            Text = hasSynced
+                ? $"{track.Title} — {track.ArtistLine}"
+                : _lyricsInstrumental
+                    ? "Инструментальная композиция — текста нет"
+                    : string.IsNullOrWhiteSpace(_lyricsPlain)
+                        ? "Текст не найден"
+                        : "Текст без синхронизации",
         };
         var list = new ListView { Height = 380, SelectionMode = ListViewSelectionMode.None };
         panel.Children.Add(status);
@@ -246,6 +253,20 @@ public sealed partial class MainWindow
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(0, 2, 0, 2),
             });
+        }
+
+        if (!hasSynced && !string.IsNullOrWhiteSpace(_lyricsPlain))
+        {
+            foreach (var line in _lyricsPlain!.Split(@"
+"))
+            {
+                list.Items.Add(new TextBlock
+                {
+                    Text = line.TrimEnd(),
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 2, 0, 2),
+                });
+            }
         }
 
         var dialog = new ContentDialog

@@ -22,35 +22,74 @@ public static class LyricsApi
 {
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(12) };
 
+    /// <summary>Текст без таймкодов — показывается, когда синхронизированного нет.</summary>
+    public static string? LastPlain { get; private set; }
+
+    /// <summary>Инструментальная композиция — текста не будет по определению.</summary>
+    public static bool LastInstrumental { get; private set; }
+
     public static async Task<List<LrcLine>> GetAsync(string? artist, string? title, string? album, int? durationSec)
     {
+        LastPlain = null;
+        LastInstrumental = false;
         if (string.IsNullOrWhiteSpace(artist) || string.IsNullOrWhiteSpace(title)) return new List<LrcLine>();
 
-        var url = "https://lrclib.net/api/get"
-                  + $"?artist_name={Uri.EscapeDataString(artist)}"
-                  + $"&track_name={Uri.EscapeDataString(title)}"
-                  + (string.IsNullOrWhiteSpace(album) ? "" : $"&album_name={Uri.EscapeDataString(album!)}")
-                  + (durationSec is > 0 ? $"&duration={durationSec}" : "");
-
-        try
+        // Первый заход — с альбомом и длительностью, второй — только название и
+        // исполнитель. У Bluetooth-трека альбом и длительность приходят от телефона
+        // и часто не совпадают с базой: одна попытка давала 404 и «текст не найден».
+        foreach (var strict in new[] { true, false })
         {
-            using var response = await Http.GetAsync(url).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode) return new List<LrcLine>();
-            var body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var url = "https://lrclib.net/api/get"
+                      + $"?artist_name={Uri.EscapeDataString(artist)}"
+                      + $"&track_name={Uri.EscapeDataString(title)}"
+                      + (strict && !string.IsNullOrWhiteSpace(album) ? $"&album_name={Uri.EscapeDataString(album!)}" : "")
+                      + (strict && durationSec is > 0 ? $"&duration={durationSec}" : "");
 
-            using var doc = JsonDocument.Parse(body);
-            if (!doc.RootElement.TryGetProperty("syncedLyrics", out var synced) ||
-                synced.ValueKind != JsonValueKind.String)
+            try
             {
-                return new List<LrcLine>();
-            }
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.UserAgent.ParseAdd("SberBoomRemote/1.0 (+https://github.com/matvey68568/sberboom-remote)");
+                using var response = await Http.SendAsync(request).ConfigureAwait(false);
+                if (!response.IsSuccessStatusCode) continue;
 
-            return ParseLrc(synced.GetString() ?? "");
+                var body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                using var doc = JsonDocument.Parse(body);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("instrumental", out var instr) && instr.ValueKind == JsonValueKind.True)
+                {
+                    LastInstrumental = true;
+                    return new List<LrcLine>();
+                }
+
+                if (root.TryGetProperty("plainLyrics", out var plain) && plain.ValueKind == JsonValueKind.String)
+                {
+                    LastPlain = plain.GetString()?.Trim();
+                }
+
+                if (root.TryGetProperty("syncedLyrics", out var synced) &&
+                    synced.ValueKind == JsonValueKind.String &&
+                    !string.IsNullOrWhiteSpace(synced.GetString()))
+                {
+                    var lines = ParseLrc(synced.GetString()!);
+                    if (lines.Count > 0)
+                    {
+                        SberBoom.WinUI.Program.Log($"lyrics: {lines.Count} строк (строгий поиск: {strict})");
+                        return lines;
+                    }
+                }
+
+                // Есть только plain — годится как резерв, но синхронизированный
+                // вариант ищем ещё раз без альбома.
+                if (!string.IsNullOrWhiteSpace(LastPlain) && !strict) return new List<LrcLine>();
+            }
+            catch (Exception ex)
+            {
+                SberBoom.WinUI.Program.Log("lyrics: " + ex.Message);
+            }
         }
-        catch
-        {
-            return new List<LrcLine>();
-        }
+
+        return new List<LrcLine>();
     }
 
     /// <summary>Поправка на задержку позиции: строка показывается чуть раньше звука.</summary>
