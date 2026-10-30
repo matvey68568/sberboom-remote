@@ -150,6 +150,34 @@ class ProtocolTest {
     }
 
     @Test
+    fun parsesRealBluetoothState() {
+        // Живой ответ op=12 при воспроизведении с телефона по Bluetooth:
+        // первым идёт приложение Звука (не играет), у Bluetooth-источника нет trackId,
+        // альбом лежит в releases[].name.
+        val state = """
+            {"background_apps":[
+              {"app_info":{"systemName":"music"},
+               "state":{"player":{"playing":false,"position":80,"duration":137,
+                 "info":{"title":"ночь","artists":[{"id":210005025,"name":"ooes"}],
+                         "provider":"zvuk","trackId":"175449063"}}}},
+              {"app_info":{"systemName":"bluetooth_media_control"},
+               "state":{"player":{"playing":true,"position":49,"duration":173,
+                 "info":{"title":"Game Over","artists":[{"name":"Noize MC, Staisha"}],
+                         "provider":"bluetooth","releases":[{"name":"Неразбериха"}]}}}}
+            ]}
+        """.trimIndent()
+
+        val track = Payloads.trackFromRawState(state.toByteArray())
+        assertNotNull(track)
+        assertEquals(Source.BLUETOOTH, track!!.source)
+        assertEquals("Game Over", track.title)
+        assertEquals("Noize MC, Staisha", track.artistLine)
+        assertEquals("Неразбериха", track.album)
+        assertEquals(173, track.durationSec)
+        assertEquals(49, track.positionSec)
+    }
+
+    @Test
     fun parsesBluetoothTrack() {
         val state = """
             {"volume":{"muted":true,"percent":30},

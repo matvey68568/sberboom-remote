@@ -331,8 +331,8 @@ class PlayerRepository(
         pollJob = scope.launch {
             var ticks = 0
             while (isActive) {
-                delay(5_000)
-                ticks += 5
+                delay(3_000)
+                ticks += 3
                 try {
                     if (ticks % 25 == 0) c.fire(Requests.KEEP_ALIVE)
 

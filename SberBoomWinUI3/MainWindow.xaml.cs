@@ -66,6 +66,7 @@ public sealed partial class MainWindow : Window
     private List<LrcLine> _lyrics = new();
     private bool _sleepFired;
     private bool _dialogOpen;
+    private double _dpiScale = 1.0;
 
     public MainWindow()
     {
@@ -113,19 +114,62 @@ public sealed partial class MainWindow : Window
         _volumeTimer.Tick += (_, _) => FlushVolume();
 
         HostBox.Text = _settings.Host ?? string.Empty;
+
+        // Перенос окна на монитор с другим масштабом: сохраняем тот же вид,
+        // подгоняя физический размер под новый DPI и не вылезая за рабочий стол.
+        if (RootGrid.XamlRoot is { } root)
+        {
+            root.Changed += (_, _) =>
+            {
+                var scale = root.RasterizationScale;
+                if (scale <= 0 || Math.Abs(scale - _dpiScale) < 0.01) return;
+                _dpiScale = scale;
+                try
+                {
+                    var area = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Nearest);
+                    var w = Math.Min((int)Math.Round(480 * scale), area.WorkArea.Width - 24);
+                    var h = Math.Min((int)Math.Round(920 * scale), area.WorkArea.Height - 24);
+                    var pos = AppWindow.Position;
+                    AppWindow.Resize(new SizeInt32(w, h));
+                    var x = Math.Clamp(pos.X, area.WorkArea.X,
+                        area.WorkArea.X + Math.Max(0, area.WorkArea.Width - w));
+                    var y = Math.Clamp(pos.Y, area.WorkArea.Y,
+                        area.WorkArea.Y + Math.Max(0, area.WorkArea.Height - h));
+                    AppWindow.Move(new PointInt32(x, y));
+                    Program.Log($"dpi: {scale:0.##} → {w}x{h}");
+                }
+                catch (Exception ex)
+                {
+                    Program.Log("dpi: " + ex.Message);
+                }
+            };
+        }
+
         Program.Log("window ready");
 
         _ = StartupAsync();
     }
 
+    /// <summary>
+    /// Размер окна задаётся в логических пикселях и переводится в физические по
+    /// текущему масштабу экрана: иначе при переносе окна на монитор с другим DPI
+    /// (или при 125/150 %) содержимое сжималось и «съезжало».
+    /// </summary>
     private void ResizeWindow(int width, int height)
     {
         try
         {
-            AppWindow.Resize(new SizeInt32(width, height));
+            var scale = RootGrid.XamlRoot?.RasterizationScale ?? 1.0;
+            if (scale <= 0) scale = 1.0;
+            _dpiScale = scale;
+
             var area = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Nearest);
-            var x = area.WorkArea.X + (area.WorkArea.Width - width) / 2;
-            var y = area.WorkArea.Y + Math.Max(0, (area.WorkArea.Height - height) / 2);
+            var w = Math.Min((int)Math.Round(width * scale), area.WorkArea.Width - 24);
+            var h = Math.Min((int)Math.Round(height * scale), area.WorkArea.Height - 24);
+
+            AppWindow.Resize(new SizeInt32(w, h));
+            var x = area.WorkArea.X + (area.WorkArea.Width - w) / 2;
+            var y = area.WorkArea.Y + Math.Max(0, (area.WorkArea.Height - h) / 2);
             AppWindow.Move(new PointInt32(x, y));
         }
         catch (Exception ex)
