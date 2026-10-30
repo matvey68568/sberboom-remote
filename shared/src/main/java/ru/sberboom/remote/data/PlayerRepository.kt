@@ -83,7 +83,6 @@ data class PlayerUiState(
     val lyricsSource: String? = null,
     val lyricsInstrumental: Boolean = false,
     val lyricsLoading: Boolean = false,
-    val karaokeFill: Boolean = true,
     /** Светлая тема оформления. */
     val lightTheme: Boolean = false,
     val history: List<HistoryEntry> = emptyList(),
@@ -131,7 +130,6 @@ class PlayerRepository(
             deviceName = prefs.deviceName,
             deviceModel = prefs.deviceModel,
             deviceFirmware = prefs.deviceFirmware,
-            karaokeFill = prefs.karaokeFill,
             lyricLeadSec = prefs.lyricLeadMs / 1000f,
             lightTheme = prefs.lightTheme,
             history = readHistory(),
@@ -345,10 +343,25 @@ class PlayerRepository(
                         if (speaker.device != null) _state.update { it.copy(device = speaker.device) }
                     }
 
-                    if (ticks % 20 == 0) {
-                        val md = c.request(Requests.GET_METADATA, 5_000)
-                        val track = Payloads.parseTrack(md) ?: Payloads.trackFromRawState(raw)
-                        if (track != null) applyTrack(track)
+                    // Источник правды — состояние: в нём есть и Bluetooth, и радио.
+                    // op=14 отдаёт только трек Звука, поэтому используется лишь как
+                    // уточнение (обложка/альбом) и только при совпадении трека.
+                    val stateTrack = Payloads.trackFromRawState(raw)
+                    if (stateTrack != null) {
+                        var track: Track = stateTrack
+                        if (stateTrack.source == Source.MUSIC && ticks % 20 == 0) {
+                            val md = c.request(Requests.GET_METADATA, 5_000)
+                            Payloads.parseTrack(md)?.let { meta ->
+                                if (meta.trackId == stateTrack.trackId) {
+                                    track = stateTrack.copy(
+                                        album = stateTrack.album ?: meta.album,
+                                        releaseId = stateTrack.releaseId ?: meta.releaseId,
+                                        durationSec = stateTrack.durationSec ?: meta.durationSec,
+                                    )
+                                }
+                            }
+                        }
+                        applyTrack(track)
                     }
                 } catch (e: CancellationException) {
                     throw e
@@ -848,13 +861,6 @@ class PlayerRepository(
         if (key != null) lyricsCache.remove(key)
         lastLyricsKey = null
         _state.value.track?.let { loadLyrics(it) }
-    }
-
-    /** Караоке-заливка активной строки (посимвольно) — вкл/выкл. */
-    fun toggleKaraokeFill() {
-        val value = !_state.value.karaokeFill
-        prefs.karaokeFill = value
-        _state.update { it.copy(karaokeFill = value) }
     }
 
     private fun zvukCover(track: Track): String? {

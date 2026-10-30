@@ -26,8 +26,6 @@ interface Settings {
     var deviceModel: String?
     var deviceFirmware: String?
     var clientName: String
-    var karaokeFill: Boolean
-
     /**
      * Поправка караоке в миллисекундах: насколько раньше показывать строку.
      * Зависит от версии трека на колонке — подстраивается вручную.

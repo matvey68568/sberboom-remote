@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Lyrics
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -37,15 +36,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import ru.sberboom.remote.net.LyricLine
-import kotlin.math.roundToInt
 
 /**
  * Караоке-экран: текст песни с подсветкой текущей строки.
@@ -64,9 +59,6 @@ fun LyricsPanel(
     instrumental: Boolean,
     loading: Boolean,
     activeIndex: Int,
-    karaokeFill: Boolean,
-    activeProgress: Float,
-    onToggleFill: () -> Unit,
     leadMs: Int,
     onNudgeLead: (Int) -> Unit,
     onReload: () -> Unit,
@@ -140,14 +132,6 @@ fun LyricsPanel(
                         }
                     }
                 }
-                IconButton(onClick = onToggleFill) {
-                    Icon(
-                        Icons.Rounded.Lyrics,
-                        if (karaokeFill) "Выключить заливку строки" else "Включить заливку строки",
-                        tint = if (karaokeFill) SberGreen else Muted,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
                 // Подстройка синхронизации: тайминги из базы могут расходиться с версией
                 // трека на колонке, поэтому сдвиг задаётся вручную.
                 IconButton(onClick = { onNudgeLead(-250) }) {
@@ -159,7 +143,7 @@ fun LyricsPanel(
                     )
                 }
                 Text(
-                    "%.2f".format(java.util.Locale.US, leadMs / 1000f),
+                    "%.2f с".format(java.util.Locale.US, leadMs / 1000f),
                     style = MaterialTheme.typography.labelSmall,
                     color = Muted,
                 )
@@ -202,33 +186,16 @@ fun LyricsPanel(
                             lineHeight = if (isActive) 34.sp else 28.sp,
                             fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
                         )
-                        if (isActive && karaokeFill) {
-                            // Посимвольная заливка: пропетая часть — акцентным цветом.
-                            val cut = (text.length * activeProgress.coerceIn(0f, 1f))
-                                .roundToInt()
-                                .coerceIn(0, text.length)
-                            Text(
-                                buildAnnotatedString {
-                                    withStyle(SpanStyle(color = SberGreen)) { append(text.substring(0, cut)) }
-                                    withStyle(SpanStyle(color = MaterialTheme.colorScheme.onBackground)) {
-                                        append(text.substring(cut))
-                                    }
-                                },
-                                style = activeStyle,
-                                modifier = Modifier.padding(vertical = 7.dp),
-                            )
-                        } else {
-                            Text(
-                                text,
-                                style = activeStyle,
-                                color = when {
-                                    isActive -> MaterialTheme.colorScheme.onBackground
-                                    index < activeIndex -> Muted.copy(alpha = 0.55f)
-                                    else -> Muted.copy(alpha = 0.9f)
-                                },
-                                modifier = Modifier.padding(vertical = 7.dp),
-                            )
-                        }
+                        Text(
+                            text,
+                            style = activeStyle,
+                            color = when {
+                                isActive -> MaterialTheme.colorScheme.onBackground
+                                index < activeIndex -> Muted.copy(alpha = 0.55f)
+                                else -> Muted.copy(alpha = 0.9f)
+                            },
+                            modifier = Modifier.padding(vertical = 7.dp),
+                        )
                     }
                 }
 

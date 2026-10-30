@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using SberBoom.WinUI.Net;
@@ -72,6 +73,15 @@ internal static class Program
                 Console.WriteLine($"       playing={t.Playing} pos={t.PositionSec}/{t.DurationSec} shuffle={t.Shuffle} repeat={t.Repeat} liked={t.Liked} speed={t.Speed}");
                 Console.WriteLine($"       ids: trackId={t.TrackId} releaseId={t.ReleaseId} source={t.Source}");
                 Console.WriteLine($"       cover: {t.CoverUrl}");
+            }
+
+            if (args.Length >= 3 && args[2] == "dump")
+            {
+                var json = await client.GetStateJsonAsync();
+                var path = Path.Combine(Path.GetTempPath(), "sberboom-state.json");
+                await File.WriteAllTextAsync(path, json ?? "");
+                Console.WriteLine($"state: {(json?.Length ?? 0)} символов → {path}");
+                Console.WriteLine(json?.Length > 3000 ? json[..3000] : json);
             }
 
             if (args.Length >= 5 && args[2] == "bt")

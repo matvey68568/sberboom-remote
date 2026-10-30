@@ -190,6 +190,13 @@ public sealed class SpeakerClient : IAsyncDisposable
         return StateParser.Parse(ExtractJson(reply.Body, Proto.OpGetState));
     }
 
+    /// <summary>Состояние (op=12) как сырой JSON — для диагностики.</summary>
+    public async Task<string?> GetStateJsonAsync()
+    {
+        var reply = await RequestAsync(Requests.GetState).ConfigureAwait(false);
+        return ExtractJson(reply.Body, Proto.OpGetState);
+    }
+
     /// <summary>Очередь воспроизведения (op=17) — сырой JSON.</summary>
     public async Task<string?> GetQueueJsonAsync()
     {

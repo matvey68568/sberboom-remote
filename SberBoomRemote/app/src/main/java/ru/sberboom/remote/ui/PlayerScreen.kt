@@ -643,14 +643,6 @@ fun PlayerScreen(
             val leadSec = state.lyricLeadSec
             val positionSec = (track?.livePositionSec(tick) ?: 0).toFloat()
             val activeIndex = state.lyrics.indexOfLast { it.timeSec <= positionSec + leadSec }
-            val lineStart = state.lyrics.getOrNull(activeIndex)?.timeSec
-            val nextStart = state.lyrics.getOrNull(activeIndex + 1)?.timeSec
-            val progress = if (lineStart != null) {
-                val span = ((nextStart ?: (lineStart + 4f)) - lineStart).coerceAtLeast(0.3f)
-                ((positionSec - lineStart) / span).coerceIn(0f, 1f)
-            } else {
-                0f
-            }
             LyricsPanel(
                 title = track?.title,
                 artist = track?.artistLine?.takeIf { it.isNotBlank() } ?: track?.stationName,
@@ -661,9 +653,6 @@ fun PlayerScreen(
                 instrumental = state.lyricsInstrumental,
                 loading = state.lyricsLoading,
                 activeIndex = activeIndex,
-                karaokeFill = state.karaokeFill,
-                activeProgress = progress,
-                onToggleFill = { repo.toggleKaraokeFill() },
                 leadMs = (state.lyricLeadSec * 1000).toInt(),
                 onNudgeLead = { repo.setLyricLead(it) },
                 onReload = { repo.reloadLyrics() },

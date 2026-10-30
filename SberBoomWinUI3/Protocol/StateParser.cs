@@ -122,6 +122,10 @@ public static class StateParser
 
     private static (JsonElement? player, JsonElement? info) FindPlayer(JsonElement root)
     {
+        // У Bluetooth-источника нет trackId, поэтому «играющее приложение» важнее
+        // наличия идентификатора: иначе окно показывало трек Звука, а не то,
+        // что реально играет с телефона.
+        JsonElement? playingWithInfo = null, playingInfo = null;
         JsonElement? withTrack = null, withTrackInfo = null;
         JsonElement? firstPlayer = null, firstInfo = null;
 
@@ -137,6 +141,12 @@ public static class StateParser
             if (player.TryGetProperty("info", out var info) && info.ValueKind == JsonValueKind.Object)
             {
                 firstInfo ??= info;
+                var hasTitle = !string.IsNullOrWhiteSpace(GetString(info, "title"));
+                if (hasTitle && playingWithInfo == null && GetBool(player, "playing") == true)
+                {
+                    playingWithInfo = player;
+                    playingInfo = info;
+                }
                 if (GetString(info, "trackId") is { Length: > 0 })
                 {
                     withTrack ??= player;
@@ -147,6 +157,7 @@ public static class StateParser
             }
         }
 
+        if (playingWithInfo != null) return (playingWithInfo, playingInfo);
         return withTrack != null ? (withTrack, withTrackInfo) : (firstPlayer, firstInfo);
     }
 
@@ -169,18 +180,20 @@ public static class StateParser
             foreach (var r in rel.EnumerateArray())
             {
                 releaseId ??= GetString(r, "id");
-                album ??= GetString(r, "title");
+                album ??= GetString(r, "title") ?? GetString(r, "name");
             }
         }
 
         var mode = player is { } pl ? GetString(pl, "mode") : null;
         var provider = GetString(info, "provider");
         var playlistTitle = GetString(info, "playlistTitle");
-        var source = mode == "radio" || GetString(info, "stationName") != null
-            ? Source.Radio
-            : provider == "zvuk" || GetString(info, "trackId") != null
-                ? Source.Music
-                : Source.Unknown;
+        var source = provider == "bluetooth"
+            ? Source.Bluetooth
+            : mode == "radio" || GetString(info, "stationName") != null
+                ? Source.Radio
+                : provider == "zvuk" || GetString(info, "trackId") != null
+                    ? Source.Music
+                    : Source.Unknown;
 
         var duration = player is { } p1 ? GetInt(p1, "duration") : null;
         duration ??= GetInt(info, "total");
